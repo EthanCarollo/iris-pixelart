@@ -15,7 +15,7 @@ Puis ouvre l'adresse locale affichée par Nuxt.
 
 ## Dataset Hugging Face
 
-Saisis un jeton Hugging Face qui a accès en lecture au dataset, puis clique sur **Connecter**. Choisis une configuration et un split ; le tableau charge les lignes par pages de 100 et permet la recherche dans les colonnes textuelles.
+À l'ouverture, l'application essaie de charger le dataset sans jeton et affiche automatiquement son premier split si l'accès est public. Si Hugging Face demande une authentification, saisis un jeton autorisé en lecture puis clique sur **Charger le dataset**. Tu peux ensuite choisir une configuration et un split ; le tableau charge les lignes par pages de 100 et permet la recherche dans les colonnes textuelles.
 
 Le jeton reste en mémoire pendant la session. Il n'est pas écrit dans le dépôt ni conservé dans le stockage du navigateur. Les requêtes passent par le serveur Nuxt vers l'API Dataset Viewer de Hugging Face.
 

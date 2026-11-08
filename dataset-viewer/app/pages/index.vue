@@ -36,6 +36,10 @@ const fileInput = ref<HTMLInputElement | null>(null)
 let requestController: AbortController | null = null
 let searchTimer: ReturnType<typeof setTimeout> | undefined
 
+onMounted(() => {
+  void connectHuggingFace(true)
+})
+
 const localRows = computed(() => {
   if (!dataset.value || dataset.value.source !== 'local') return []
   const term = search.value.trim().toLocaleLowerCase()
@@ -72,8 +76,8 @@ async function requestHuggingFace(endpoint: string, query: Record<string, string
   })
 }
 
-async function connectHuggingFace() {
-  setStatus('Connexion au dataset Hugging Face…')
+async function connectHuggingFace(automatic = false) {
+  setStatus(automatic ? 'Chargement automatique du dataset…' : 'Connexion au dataset Hugging Face…')
   connected.value = false
   const enteredToken = tokenInput.value.trim()
   sessionToken.value = enteredToken
@@ -93,7 +97,11 @@ async function connectHuggingFace() {
     setStatus('Connexion réussie. Chargement du dataset…')
   } catch (error) {
     sessionToken.value = ''
-    setStatus(errorMessage(error), true)
+    if (!enteredToken && isAuthError(error)) {
+      setStatus('Ce dataset demande une authentification Hugging Face. Saisis un jeton avec accès en lecture, puis clique sur « Charger le dataset ».', true)
+    } else {
+      setStatus(errorMessage(error), true)
+    }
   }
 }
 
@@ -251,6 +259,12 @@ function errorMessage(error: unknown) {
   return value?.data?.statusMessage || value?.statusMessage || value?.data?.message || value?.message || 'Impossible de charger les données.'
 }
 
+function isAuthError(error: unknown) {
+  const value = error as { status?: number; statusCode?: number; response?: { status?: number } }
+  const status = value?.statusCode ?? value?.status ?? value?.response?.status
+  return status === 401 || status === 403
+}
+
 function closeDataset() {
   requestController?.abort()
   dataset.value = null
@@ -315,7 +329,7 @@ watch(selectedConfig, () => {
             <option v-for="split in splits" :key="split" :value="split">{{ split }}</option>
           </select>
         </div>
-        <button class="button" type="submit">{{ connected ? 'Reconnecter' : 'Connecter' }}</button>
+        <button class="button" type="submit">{{ connected ? 'Reconnecter' : 'Charger le dataset' }}</button>
       </form>
       <div class="dataset-name">{{ datasetId }}</div>
       <div v-if="status" class="hf-status" :class="{ error: statusError }" role="status">{{ status }}</div>
