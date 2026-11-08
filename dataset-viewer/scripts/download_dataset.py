@@ -25,9 +25,15 @@ TOKEN = os.environ.get("HF_ACCESS_TOKEN", "").strip()
 def write_status(**values: object) -> None:
     DATASET_DIR.mkdir(parents=True, exist_ok=True)
     status = {"updatedAt": time.time(), **values}
-    temporary = STATUS_FILE.with_suffix(".tmp")
+    temporary = STATUS_FILE.with_name(f".viewer-download-status-{os.getpid()}.tmp")
     temporary.write_text(json.dumps(status), encoding="utf-8")
-    temporary.replace(STATUS_FILE)
+    for attempt in range(10):
+        try:
+            temporary.replace(STATUS_FILE)
+            return
+        except PermissionError:
+            time.sleep(0.1 * (attempt + 1))
+    STATUS_FILE.write_text(json.dumps(status), encoding="utf-8")
 
 
 def git_environment(skip_smudge: bool) -> dict[str, str]:
