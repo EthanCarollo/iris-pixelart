@@ -2,7 +2,7 @@ import { createReadStream } from 'node:fs'
 import { access } from 'node:fs/promises'
 import { resolve, sep } from 'node:path'
 
-const datasetRoot = resolve(process.cwd(), 'datasets', 'pixelart-dataset')
+const datasetRoot = resolve(process.cwd(), 'datasets', 'pixelart-dataset', '.gitrepo')
 
 export default defineEventHandler(async (event) => {
   const imagePath = getQuery(event).path

@@ -17,7 +17,7 @@ Puis ouvre l'adresse locale affichée par Nuxt.
 
 Si le dépôt est déjà téléchargé, l'application ouvre sa copie locale par défaut. Sinon, saisis un jeton qui a accès au dépôt et clique sur **Télécharger localement**. L'application récupère les fichiers du Hub, indexe les images PNG avec leur légende TXT, puis affiche le dataset depuis le disque.
 
-Le jeton est transmis au téléchargeur local en mémoire et n'est écrit ni dans le dépôt ni dans le stockage du navigateur. Le contenu privé sous `datasets/pixelart-dataset/` est ignoré par Git et ne sera pas poussé sur GitHub. Python 3 doit être disponible pour le téléchargement.
+Le jeton est transmis au téléchargeur local en mémoire et n'est écrit ni dans le dépôt ni dans le stockage du navigateur. Le contenu privé sous `datasets/pixelart-dataset/` est ignoré par Git et ne sera pas poussé sur GitHub. Python 3, Git et Git LFS doivent être disponibles pour le téléchargement.
 
 ## Fichiers locaux
 

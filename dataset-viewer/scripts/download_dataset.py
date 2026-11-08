@@ -1,28 +1,25 @@
-"""Download the private Hugging Face dataset and prepare a local image index."""
+"""Clone the private Hugging Face dataset, fetch its LFS assets and index images."""
 
 from __future__ import annotations
 
-import concurrent.futures
+import base64
 import json
 import os
 import pathlib
+import subprocess
 import sys
 import threading
 import time
-import urllib.error
-import urllib.parse
-import urllib.request
 
 
 REPO_ID = "ethanzxv/pixelart-dataset"
-REPO_TYPE = "datasets"
+REPO_URL = f"https://huggingface.co/datasets/{REPO_ID}"
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 DATASET_DIR = ROOT / "datasets" / "pixelart-dataset"
+REPO_DIR = DATASET_DIR / ".gitrepo"
 STATUS_FILE = DATASET_DIR / ".viewer-download-status.json"
 INDEX_FILE = DATASET_DIR / "viewer-index.json"
 TOKEN = os.environ.get("HF_ACCESS_TOKEN", "").strip()
-WORKERS = 24
-STATUS_LOCK = threading.Lock()
 
 
 def write_status(**values: object) -> None:
@@ -33,70 +30,65 @@ def write_status(**values: object) -> None:
     temporary.replace(STATUS_FILE)
 
 
-class SafeRedirectHandler(urllib.request.HTTPRedirectHandler):
-    """Do not forward the private token from Hugging Face to its storage CDN."""
-
-    def redirect_request(self, request, file_pointer, code, message, headers, new_url):
-        redirected = super().redirect_request(request, file_pointer, code, message, headers, new_url)
-        if redirected is not None:
-            original_host = urllib.parse.urlparse(request.full_url).hostname
-            redirected_host = urllib.parse.urlparse(new_url).hostname
-            if original_host != redirected_host:
-                redirected.remove_header("Authorization")
-                redirected.unredirected_hdrs.pop("Authorization", None)
-                redirected.remove_header("authorization")
-                redirected.unredirected_hdrs.pop("authorization", None)
-        return redirected
+def git_environment(skip_smudge: bool) -> dict[str, str]:
+    environment = os.environ.copy()
+    auth = base64.b64encode(f"user:{TOKEN}".encode("utf-8")).decode("ascii")
+    environment["GIT_CONFIG_COUNT"] = "1"
+    environment["GIT_CONFIG_KEY_0"] = "http.https://huggingface.co/.extraheader"
+    environment["GIT_CONFIG_VALUE_0"] = f"AUTHORIZATION: Basic {auth}"
+    if skip_smudge:
+        environment["GIT_LFS_SKIP_SMUDGE"] = "1"
+    else:
+        environment.pop("GIT_LFS_SKIP_SMUDGE", None)
+    return environment
 
 
-OPENER = urllib.request.build_opener(SafeRedirectHandler())
+def run(command: list[str], *, environment: dict[str, str]) -> None:
+    result = subprocess.run(command, cwd=ROOT, env=environment, text=True, capture_output=True)
+    if result.returncode:
+        detail = (result.stderr or result.stdout or "").strip()
+        if "401" in detail or "403" in detail or "Unauthorized" in detail:
+            raise RuntimeError("Accès refusé par Hugging Face. Vérifie le jeton et son accès au dépôt.")
+        raise RuntimeError(detail[-2000:] or f"{command[0]} failed with exit code {result.returncode}")
 
 
-def fetch_repo_files() -> list[str]:
-    url = f"https://huggingface.co/api/{REPO_TYPE}/{REPO_ID}"
-    request = urllib.request.Request(url, headers={"Authorization": f"Bearer {TOKEN}", "User-Agent": "iris-pixelart-dataset-viewer"})
-    with OPENER.open(request, timeout=60) as response:
-        repository = json.load(response)
-    return [entry["rfilename"] for entry in repository.get("siblings", []) if entry.get("rfilename")]
+def lfs_counts(environment: dict[str, str]) -> tuple[int, int]:
+    result = subprocess.run(
+        ["git", "-C", str(REPO_DIR), "lfs", "ls-files", "--long"],
+        cwd=ROOT,
+        env=environment,
+        text=True,
+        capture_output=True,
+    )
+    if result.returncode:
+        return 0, 0
+    lines = [line for line in result.stdout.splitlines() if line.strip()]
+    downloaded = sum(1 for line in lines if len(line.split(maxsplit=2)) > 1 and line.split(maxsplit=2)[1] == "*")
+    return downloaded, len(lines)
 
 
-def download_file(relative_path: str) -> tuple[str, str | None]:
-    destination = DATASET_DIR.joinpath(*pathlib.PurePosixPath(relative_path).parts)
-    if destination.exists() and destination.is_file():
-        return relative_path, None
-
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    partial = destination.with_name(destination.name + ".part")
-    encoded_path = urllib.parse.quote(relative_path, safe="/")
-    url = f"https://huggingface.co/datasets/{REPO_ID}/resolve/main/{encoded_path}?download=true"
-    headers = {"Authorization": f"Bearer {TOKEN}", "User-Agent": "iris-pixelart-dataset-viewer"}
-    error_message = "download failed"
-
-    for attempt in range(5):
-        try:
-            request = urllib.request.Request(url, headers=headers)
-            with OPENER.open(request, timeout=180) as response, partial.open("wb") as output:
-                while True:
-                    chunk = response.read(1024 * 1024)
-                    if not chunk:
-                        break
-                    output.write(chunk)
-            partial.replace(destination)
-            return relative_path, None
-        except (OSError, urllib.error.URLError, urllib.error.HTTPError) as error:
-            error_message = f"{type(error).__name__}: {error}"
-            try:
-                partial.unlink(missing_ok=True)
-            except OSError:
-                pass
-            if attempt < 4:
-                time.sleep(min(2 ** attempt, 16))
-
-    return relative_path, error_message
+def pull_lfs(environment: dict[str, str]) -> None:
+    downloaded, total = lfs_counts(environment)
+    write_status(status="downloading", done=downloaded, total=total, message="Téléchargement des images Git LFS")
+    process = subprocess.Popen(
+        ["git", "-C", str(REPO_DIR), "lfs", "pull"],
+        cwd=ROOT,
+        env=environment,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    while process.poll() is None:
+        time.sleep(10)
+        downloaded, total = lfs_counts(environment)
+        write_status(status="downloading", done=downloaded, total=total, message="Téléchargement des images Git LFS")
+    if process.returncode:
+        raise RuntimeError(f"git lfs pull failed with exit code {process.returncode}")
+    downloaded, total = lfs_counts(environment)
+    write_status(status="downloading", done=downloaded, total=total, message="Images téléchargées, indexation en cours")
 
 
 def build_viewer_index() -> int:
-    image_files = sorted((DATASET_DIR / "data").rglob("*.png"))
+    image_files = sorted((REPO_DIR / "data").rglob("*.png"))
     rows: list[dict[str, str]] = []
     total = len(image_files)
     write_status(status="indexing", done=0, total=total, message="Préparation de l'index local")
@@ -108,7 +100,7 @@ def build_viewer_index() -> int:
         except OSError:
             caption = ""
         rows.append({
-            "path": image_path.relative_to(DATASET_DIR).as_posix(),
+            "path": image_path.relative_to(REPO_DIR).as_posix(),
             "caption": caption,
             "folder": image_path.parent.name,
             "name": image_path.stem,
@@ -128,37 +120,22 @@ def main() -> int:
         return 2
 
     try:
-        write_status(status="listing", done=0, total=0, message="Lecture du manifeste Hugging Face")
-        files = fetch_repo_files()
-        if not files:
-            raise RuntimeError("Hugging Face returned an empty repository manifest")
+        DATASET_DIR.mkdir(parents=True, exist_ok=True)
+        if not (REPO_DIR / ".git").exists():
+            write_status(status="cloning", done=0, total=0, message="Clonage des fichiers du dépôt Hugging Face")
+            run(["git", "clone", "--depth", "1", REPO_URL, str(REPO_DIR)], environment=git_environment(skip_smudge=True))
 
-        write_status(status="downloading", done=0, total=len(files), message="Téléchargement des fichiers du dataset")
-        errors: list[tuple[str, str]] = []
-        completed = 0
-        with concurrent.futures.ThreadPoolExecutor(max_workers=WORKERS) as executor:
-            futures = [executor.submit(download_file, relative_path) for relative_path in files]
-            for future in concurrent.futures.as_completed(futures):
-                path, error = future.result()
-                completed += 1
-                if error:
-                    errors.append((path, error))
-                if completed % 250 == 0 or completed == len(files):
-                    write_status(status="downloading", done=completed, total=len(files), errors=len(errors), message="Téléchargement des fichiers du dataset")
-                    print(f"{completed}/{len(files)} files", flush=True)
-
-        if errors:
-            summary = [{"path": path, "error": message} for path, message in errors[:20]]
-            write_status(status="error", done=completed, total=len(files), errors=len(errors), details=summary, message="Le téléchargement est incomplet")
-            return 1
-
+        environment = git_environment(skip_smudge=False)
+        run(["git", "-C", str(REPO_DIR), "config", "lfs.concurrenttransfers", "24"], environment=environment)
+        pull_lfs(environment)
         image_count = build_viewer_index()
-        write_status(status="complete", done=len(files), total=len(files), images=image_count, message="Dataset téléchargé et indexé")
-        print(f"Downloaded {len(files)} files and indexed {image_count} images", flush=True)
+        write_status(status="complete", done=image_count, total=image_count, images=image_count, message="Dataset téléchargé et indexé")
+        print(f"Indexed {image_count} local images", flush=True)
         return 0
-    except Exception as error:  # Keep the error in the local status file, never the token.
-        write_status(status="error", done=0, total=0, message="Échec du téléchargement", details=str(error))
-        print(f"Dataset download failed: {error}", file=sys.stderr, flush=True)
+    except Exception as error:  # The token is never included in status or log output.
+        message = str(error)
+        write_status(status="error", done=0, total=0, message=message or "Échec du téléchargement")
+        print(f"Dataset download failed: {message}", file=sys.stderr, flush=True)
         return 1
 
 
