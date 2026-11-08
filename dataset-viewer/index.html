@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f5f2">
+  <title>Dataset Viewer</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #20231f;
+      --muted: #777b73;
+      --line: #e4e6df;
+      --paper: #fff;
+      --canvas: #f5f5f2;
+      --accent: #446b4d;
+      --accent-soft: #eaf1e9;
+      --danger: #a43e35;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--canvas); color: var(--ink); }
+    button, input { font: inherit; }
+    .shell { max-width: 1240px; margin: 0 auto; padding: 48px 28px 64px; }
+    header { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; margin-bottom: 30px; }
+    .eyebrow { margin: 0 0 10px; color: var(--accent); font-size: 11px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+    h1 { margin: 0; font-size: clamp(32px, 5vw, 46px); letter-spacing: -.045em; line-height: 1.05; }
+    .subtitle { color: var(--muted); margin: 12px 0 0; font-size: 15px; }
+    .privacy { border: 1px solid var(--line); border-radius: 999px; padding: 9px 13px; color: #555b52; background: #fbfbf9; font-size: 12px; white-space: nowrap; }
+    .privacy::before { content: ""; display: inline-block; width: 7px; height: 7px; margin-right: 8px; border-radius: 50%; background: #66a06e; vertical-align: 1px; }
+    .dropzone { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 22px 24px; border: 1px dashed #b8c3b5; border-radius: 14px; background: #fbfcf9; transition: .16s ease; }
+    .dropzone.is-over { border-color: var(--accent); background: var(--accent-soft); }
+    .drop-copy { display: flex; align-items: center; gap: 15px; }
+    .upload-icon { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 11px; color: var(--accent); background: var(--accent-soft); font-size: 20px; }
+    .drop-copy strong { display: block; font-size: 14px; }
+    .drop-copy span { display: block; margin-top: 4px; color: var(--muted); font-size: 12px; }
+    .button { display: inline-flex; align-items: center; justify-content: center; border: 0; border-radius: 8px; padding: 10px 15px; color: white; background: var(--accent); cursor: pointer; font-size: 13px; font-weight: 700; transition: background .15s ease, transform .15s ease; }
+    .button:hover { background: #35593d; }
+    .button:active { transform: translateY(1px); }
+    .button.secondary { color: #3e493f; background: #edf0ea; }
+    .button.secondary:hover { background: #e2e8df; }
+    #fileInput { display: none; }
+    .message { display: none; margin-top: 14px; padding: 12px 14px; border-radius: 8px; color: var(--danger); background: #fbefed; font-size: 13px; }
+    .message.show { display: block; }
+    .empty { margin-top: 18px; padding: 64px 24px; border: 1px solid var(--line); border-radius: 14px; background: var(--paper); text-align: center; }
+    .empty-mark { margin-bottom: 14px; color: #a3b09e; font-size: 32px; }
+    .empty h2 { margin: 0; font-size: 18px; }
+    .empty p { margin: 9px auto 0; max-width: 440px; color: var(--muted); font-size: 13px; line-height: 1.6; }
+    .workspace { display: none; margin-top: 20px; }
+    .workspace.show { display: block; }
+    .dataset-head { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 14px; }
+    .file-title { min-width: 0; }
+    .file-title h2 { overflow: hidden; margin: 0; font-size: 17px; text-overflow: ellipsis; white-space: nowrap; }
+    .file-title p { margin: 5px 0 0; color: var(--muted); font-size: 12px; }
+    .head-actions { display: flex; gap: 8px; flex-shrink: 0; }
+    .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
+    .stat { padding: 15px 17px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); }
+    .stat span { display: block; color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+    .stat strong { display: block; margin-top: 6px; font-size: 22px; letter-spacing: -.03em; }
+    .table-card { overflow: hidden; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); }
+    .table-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 13px 15px; border-bottom: 1px solid var(--line); }
+    .search-wrap { position: relative; width: min(360px, 100%); }
+    .search-wrap::before { content: "⌕"; position: absolute; top: 5px; left: 11px; color: #8a9085; font-size: 20px; }
+    .search { width: 100%; border: 1px solid var(--line); border-radius: 7px; padding: 9px 12px 9px 34px; outline: none; background: #fcfcfa; font-size: 12px; }
+    .search:focus { border-color: #89a18b; box-shadow: 0 0 0 3px #eaf1e9; }
+    .result-count { color: var(--muted); font-size: 12px; white-space: nowrap; }
+    .table-scroll { overflow: auto; max-height: min(58vh, 610px); }
+    table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12px; }
+    thead { position: sticky; top: 0; z-index: 1; }
+    th { min-width: 130px; padding: 12px 14px; border-bottom: 1px solid var(--line); background: #f8f9f6; color: #596056; font-size: 10px; font-weight: 800; letter-spacing: .07em; text-align: left; text-transform: uppercase; }
+    td { max-width: 380px; padding: 11px 14px; border-bottom: 1px solid #eff0ec; color: #40453e; line-height: 1.45; overflow-wrap: anywhere; }
+    tbody tr:hover td { background: #fbfcf9; }
+    tbody tr:last-child td { border-bottom: 0; }
+    .pagination { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 15px; border-top: 1px solid var(--line); }
+    .page-info { color: var(--muted); font-size: 12px; }
+    .page-actions { display: flex; gap: 7px; }
+    .page-actions button { border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; color: #474e45; background: #fff; cursor: pointer; font-size: 12px; }
+    .page-actions button:disabled { opacity: .4; cursor: default; }
+    .page-actions button:not(:disabled):hover { background: #f5f7f3; }
+    footer { margin-top: 20px; color: #92968e; font-size: 11px; text-align: center; }
+    @media (max-width: 680px) {
+      .shell { padding: 28px 16px 40px; }
+      header { display: block; }
+      .privacy { display: inline-block; margin-top: 17px; }
+      .dropzone { align-items: flex-start; flex-direction: column; }
+      .dataset-head { align-items: flex-start; flex-direction: column; }
+      .stats { gap: 8px; }
+      .stat { padding: 12px; }
+      .stat strong { font-size: 18px; }
+      .table-toolbar { align-items: flex-start; flex-direction: column; }
+      .search-wrap { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div>
+        <p class="eyebrow">Outil local · CSV · TSV · JSON</p>
+        <h1>Dataset Viewer</h1>
+        <p class="subtitle">Parcours tes données dans une vue claire et filtrable.</p>
+      </div>
+      <div class="privacy">Les fichiers restent sur ton appareil</div>
+    </header>
+
+    <section class="dropzone" id="dropzone" aria-label="Importer un fichier de données">
+      <div class="drop-copy">
+        <div class="upload-icon" aria-hidden="true">↑</div>
+        <div><strong>Dépose un fichier ici</strong><span>CSV, TSV ou JSON · lecture locale</span></div>
+      </div>
+      <button class="button" id="chooseButton" type="button">Choisir un fichier</button>
+      <input id="fileInput" type="file" accept=".csv,.tsv,.json,text/csv,text/tab-separated-values,application/json">
+    </section>
+    <div class="message" id="message" role="alert"></div>
+
+    <section class="empty" id="emptyState">
+      <div class="empty-mark" aria-hidden="true">▦</div>
+      <h2>Ton aperçu apparaîtra ici</h2>
+      <p>Charge un fichier pour voir ses lignes et ses colonnes. Tu pourras ensuite rechercher dans toutes les données.</p>
+    </section>
+
+    <section class="workspace" id="workspace" aria-live="polite">
+      <div class="dataset-head">
+        <div class="file-title"><h2 id="fileName"></h2><p id="fileDetails"></p></div>
+        <div class="head-actions"><button class="button secondary" id="clearButton" type="button">Fermer le jeu de données</button></div>
+      </div>
+      <div class="stats">
+        <div class="stat"><span>Lignes</span><strong id="rowStat">0</strong></div>
+        <div class="stat"><span>Colonnes</span><strong id="columnStat">0</strong></div>
+        <div class="stat"><span>Résultats</span><strong id="resultStat">0</strong></div>
+      </div>
+      <div class="table-card">
+        <div class="table-toolbar">
+          <label class="search-wrap"><input class="search" id="searchInput" type="search" placeholder="Rechercher dans toutes les colonnes…" autocomplete="off"></label>
+          <span class="result-count" id="resultLabel"></span>
+        </div>
+        <div class="table-scroll" id="tableScroll"><table><thead id="tableHead"></thead><tbody id="tableBody"></tbody></table></div>
+        <div class="pagination">
+          <span class="page-info" id="pageInfo"></span>
+          <div class="page-actions"><button id="previousButton" type="button">← Précédent</button><button id="nextButton" type="button">Suivant →</button></div>
+        </div>
+      </div>
+    </section>
+    <footer>Dataset Viewer · aucune donnée n'est envoyée sur un serveur</footer>
+  </main>
+  <script>
+    (() => {
+      const pageSize = 100;
+      const $ = (id) => document.getElementById(id);
+      const input = $('fileInput');
+      const dropzone = $('dropzone');
+      const message = $('message');
+      let dataset = null;
+      let page = 0;
+
+      $('chooseButton').addEventListener('click', () => input.click());
+      input.addEventListener('change', () => { if (input.files[0]) loadFile(input.files[0]); input.value = ''; });
+      $('clearButton').addEventListener('click', reset);
+      $('searchInput').addEventListener('input', () => { page = 0; render(); });
+      $('previousButton').addEventListener('click', () => { page--; render(); });
+      $('nextButton').addEventListener('click', () => { page++; render(); });
+
+      for (const eventName of ['dragenter', 'dragover']) {
+        dropzone.addEventListener(eventName, (event) => { event.preventDefault(); dropzone.classList.add('is-over'); });
+      }
+      for (const eventName of ['dragleave', 'drop']) {
+        dropzone.addEventListener(eventName, (event) => { event.preventDefault(); dropzone.classList.remove('is-over'); });
+      }
+      dropzone.addEventListener('drop', (event) => {
+        const file = event.dataTransfer.files[0];
+        if (file) loadFile(file);
+      });
+
+      async function loadFile(file) {
+        hideError();
+        try {
+          const text = (await file.text()).replace(/^\uFEFF/, '');
+          const extension = file.name.split('.').pop().toLowerCase();
+          let parsed;
+          if (extension === 'json' || text.trimStart().startsWith('[') || text.trimStart().startsWith('{')) {
+            parsed = parseJson(text);
+          } else {
+            parsed = parseDelimited(text, extension === 'tsv' ? '\t' : undefined);
+          }
+          if (!parsed.columns.length) throw new Error('Aucune colonne trouvée dans ce fichier.');
+          dataset = { name: file.name, rows: parsed.rows, columns: parsed.columns, size: file.size };
+          page = 0;
+          $('searchInput').value = '';
+          $('emptyState').style.display = 'none';
+          $('workspace').classList.add('show');
+          render();
+        } catch (error) {
+          showError(error instanceof Error ? error.message : 'Impossible de lire ce fichier.');
+        }
+      }
+
+      function parseJson(text) {
+        let value;
+        try { value = JSON.parse(text); } catch { throw new Error('Le JSON est invalide. Vérifie la syntaxe du fichier.'); }
+        if (!Array.isArray(value)) {
+          if (value && Array.isArray(value.data)) value = value.data;
+          else if (value && Array.isArray(value.rows)) value = value.rows;
+          else if (value && typeof value === 'object') value = [value];
+          else throw new Error('Le JSON doit contenir un tableau d’objets.');
+        }
+        if (!value.length) return { columns: [], rows: [] };
+        const columns = [...new Set(value.flatMap((row) => row && typeof row === 'object' && !Array.isArray(row) ? Object.keys(row) : []))];
+        if (!columns.length) throw new Error('Le JSON doit être un tableau d’objets.');
+        const rows = value.map((row) => columns.map((column) => displayValue(row && typeof row === 'object' ? row[column] : '')));
+        return { columns, rows };
+      }
+
+      function parseDelimited(text, forcedDelimiter) {
+        const firstLine = text.split(/\r?\n/, 1)[0] || '';
+        const delimiter = forcedDelimiter || [',', ';', '\t'].map((candidate) => [candidate, countOutsideQuotes(firstLine, candidate)])
+          .sort((a, b) => b[1] - a[1])[0][0];
+        const records = [];
+        let row = [], field = '', quoted = false;
+        for (let i = 0; i < text.length; i++) {
+          const char = text[i];
+          if (quoted) {
+            if (char === '"' && text[i + 1] === '"') { field += '"'; i++; }
+            else if (char === '"') quoted = false;
+            else field += char;
+          } else if (char === '"' && field.length === 0) quoted = true;
+          else if (char === delimiter) { row.push(field); field = ''; }
+          else if (char === '\n' || char === '\r') {
+            if (char === '\r' && text[i + 1] === '\n') i++;
+            row.push(field); records.push(row); row = []; field = '';
+          } else field += char;
+        }
+        if (field.length || row.length) { row.push(field); records.push(row); }
+        while (records.length && records[records.length - 1].every((cell) => cell.trim() === '')) records.pop();
+        if (!records.length) return { columns: [], rows: [] };
+        const columns = records.shift().map((name, index) => name.trim() || `Colonne ${index + 1}`);
+        const rows = records.map((record) => columns.map((_, index) => record[index] ?? ''));
+        return { columns, rows };
+      }
+
+      function countOutsideQuotes(line, delimiter) {
+        let count = 0, quoted = false;
+        for (let i = 0; i < line.length; i++) {
+          if (line[i] === '"' && line[i + 1] === '"' && quoted) i++;
+          else if (line[i] === '"') quoted = !quoted;
+          else if (line[i] === delimiter && !quoted) count++;
+        }
+        return count;
+      }
+
+      function displayValue(value) {
+        if (value === null || value === undefined) return '';
+        return typeof value === 'object' ? JSON.stringify(value) : String(value);
+      }
+
+      function render() {
+        if (!dataset) return;
+        const query = $('searchInput').value.trim().toLocaleLowerCase();
+        const filtered = query ? dataset.rows.filter((row) => row.some((cell) => String(cell).toLocaleLowerCase().includes(query))) : dataset.rows;
+        const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
+        page = Math.min(Math.max(0, page), pageCount - 1);
+        const start = page * pageSize;
+        const visibleRows = filtered.slice(start, start + pageSize);
+
+        $('fileName').textContent = dataset.name;
+        $('fileDetails').textContent = `${formatBytes(dataset.size)} · ${dataset.rows.length.toLocaleString('fr-FR')} enregistrements chargés`;
+        $('rowStat').textContent = dataset.rows.length.toLocaleString('fr-FR');
+        $('columnStat').textContent = dataset.columns.length.toLocaleString('fr-FR');
+        $('resultStat').textContent = filtered.length.toLocaleString('fr-FR');
+        $('resultLabel').textContent = `${filtered.length.toLocaleString('fr-FR')} résultat${filtered.length === 1 ? '' : 's'}`;
+        $('pageInfo').textContent = filtered.length ? `Lignes ${start + 1}–${Math.min(start + pageSize, filtered.length)} sur ${filtered.length.toLocaleString('fr-FR')}` : 'Aucune ligne ne correspond à cette recherche';
+        $('previousButton').disabled = page === 0;
+        $('nextButton').disabled = page >= pageCount - 1;
+
+        const head = $('tableHead');
+        head.replaceChildren();
+        const headerRow = document.createElement('tr');
+        dataset.columns.forEach((column) => { const th = document.createElement('th'); th.textContent = column; headerRow.append(th); });
+        head.append(headerRow);
+
+        const body = $('tableBody');
+        body.replaceChildren();
+        const fragment = document.createDocumentFragment();
+        visibleRows.forEach((row) => {
+          const tr = document.createElement('tr');
+          row.forEach((cell) => { const td = document.createElement('td'); td.textContent = cell; td.title = cell; tr.append(td); });
+          fragment.append(tr);
+        });
+        body.append(fragment);
+      }
+
+      function formatBytes(bytes) {
+        if (bytes < 1024) return `${bytes} o`;
+        if (bytes < 1024 * 1024) return `${(bytes / 1024).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} Ko`;
+        return `${(bytes / (1024 * 1024)).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} Mo`;
+      }
+      function showError(text) { message.textContent = text; message.classList.add('show'); }
+      function hideError() { message.textContent = ''; message.classList.remove('show'); }
+      function reset() {
+        dataset = null;
+        hideError();
+        $('workspace').classList.remove('show');
+        $('emptyState').style.display = '';
+        $('tableHead').replaceChildren();
+        $('tableBody').replaceChildren();
+      }
+    })();
+  </script>
+</body>
+</html>
