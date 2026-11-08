@@ -1,0 +1,14 @@
+{
+  "name": "iris-pixelart-dataset-viewer",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "postinstall": "nuxt prepare",
+    "preview": "nuxt preview"
+  },
+  "dependencies": {
+    "nuxt": "^4.6.4"
+  }
+}
