@@ -15,9 +15,9 @@ Puis ouvre l'adresse locale affichée par Nuxt.
 
 ## Dataset Hugging Face
 
-À l'ouverture, l'application essaie de charger le dataset sans jeton et affiche automatiquement son premier split si l'accès est public. Si Hugging Face demande une authentification, saisis un jeton autorisé en lecture puis clique sur **Charger le dataset**. Tu peux ensuite choisir une configuration et un split ; le tableau charge les lignes par pages de 100 et permet la recherche dans les colonnes textuelles.
+Si le dépôt est déjà téléchargé, l'application ouvre sa copie locale par défaut. Sinon, saisis un jeton qui a accès au dépôt et clique sur **Télécharger localement**. L'application récupère les fichiers du Hub, indexe les images PNG avec leur légende TXT, puis affiche le dataset depuis le disque.
 
-Le jeton reste en mémoire pendant la session. Il n'est pas écrit dans le dépôt ni conservé dans le stockage du navigateur. Les requêtes passent par le serveur Nuxt vers l'API Dataset Viewer de Hugging Face.
+Le jeton est transmis au téléchargeur local en mémoire et n'est écrit ni dans le dépôt ni dans le stockage du navigateur. Le contenu privé sous `datasets/pixelart-dataset/` est ignoré par Git et ne sera pas poussé sur GitHub. Python 3 doit être disponible pour le téléchargement.
 
 ## Fichiers locaux
 

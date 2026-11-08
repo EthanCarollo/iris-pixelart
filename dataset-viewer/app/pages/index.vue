@@ -5,43 +5,41 @@ type DatasetView = {
   columns: string[]
   rows: DataRow[]
   total: number
-  source: 'local' | 'remote'
+  source: 'paged' | 'file'
   size?: number
 }
-type HuggingFaceSplit = { config: string; split: string }
-type HuggingFaceResponse = {
-  splits?: HuggingFaceSplit[]
+type DatasetResponse = {
   features?: Array<{ name: string; type?: unknown }>
   rows?: Array<{ row: DataRow }>
   num_rows_total?: number
-  error?: string
+  status?: string
+  done?: number
+  total?: number
+  message?: string
+  errors?: number
 }
 
 const datasetId = 'ethanzxv/pixelart-dataset'
 const pageSize = 100
 const tokenInput = ref('')
-const sessionToken = ref('')
-const configs = ref<string[]>([])
-const splits = ref<string[]>([])
-const selectedConfig = ref('')
-const selectedSplit = ref('')
-const connected = ref(false)
 const search = ref('')
 const currentPage = ref(0)
 const dataset = shallowRef<DatasetView | null>(null)
+const localReady = ref(false)
+const loading = ref(false)
+const downloadActive = ref(false)
+const downloadDone = ref(0)
+const downloadTotal = ref(0)
+const downloadStage = ref('')
 const status = ref('')
 const statusError = ref(false)
-const loading = ref(false)
 const fileInput = ref<HTMLInputElement | null>(null)
-let requestController: AbortController | null = null
 let searchTimer: ReturnType<typeof setTimeout> | undefined
+let downloadPoll: ReturnType<typeof setInterval> | undefined
+let requestController: AbortController | null = null
 
-onMounted(() => {
-  void connectHuggingFace(true)
-})
-
-const localRows = computed(() => {
-  if (!dataset.value || dataset.value.source !== 'local') return []
+const localFileRows = computed(() => {
+  if (!dataset.value || dataset.value.source !== 'file') return []
   const term = search.value.trim().toLocaleLowerCase()
   if (!term) return dataset.value.rows
   return dataset.value.rows.filter((row) =>
@@ -50,108 +48,150 @@ const localRows = computed(() => {
 })
 const totalRows = computed(() => {
   if (!dataset.value) return 0
-  return dataset.value.source === 'remote' ? dataset.value.total : localRows.value.length
+  return dataset.value.source === 'paged' ? dataset.value.total : localFileRows.value.length
 })
 const visibleRows = computed(() => {
   if (!dataset.value) return []
-  if (dataset.value.source === 'remote') return dataset.value.rows
+  if (dataset.value.source === 'paged') return dataset.value.rows
   const start = currentPage.value * pageSize
-  return localRows.value.slice(start, start + pageSize)
+  return localFileRows.value.slice(start, start + pageSize)
 })
 const pageCount = computed(() => Math.max(1, Math.ceil(totalRows.value / pageSize)))
+const downloadProgress = computed(() => downloadTotal.value > 0 ? Math.min(100, Math.round(downloadDone.value / downloadTotal.value * 100)) : 0)
 
-watch([connected, selectedConfig, selectedSplit, search, currentPage], () => {
-  if (!connected.value) return
-  clearTimeout(searchTimer)
-  requestController?.abort()
-  searchTimer = setTimeout(() => loadRemotePage(), search.value.trim() ? 350 : 0)
+onMounted(async () => {
+  try {
+    await loadDownloadedDataset(0)
+    localReady.value = true
+    setStatus('Copie locale chargée. Les images sont servies depuis ce dossier.')
+  } catch {
+    localReady.value = false
+    await resumeDownloadIfActive()
+  }
 })
 
+watch([search, currentPage], () => {
+  if (dataset.value?.source !== 'paged' || !localReady.value) return
+  clearTimeout(searchTimer)
+  requestController?.abort()
+  searchTimer = setTimeout(() => loadDownloadedDataset(currentPage.value), search.value.trim() ? 250 : 0)
+})
 watch(search, () => { currentPage.value = 0 })
 
-async function requestHuggingFace(endpoint: string, query: Record<string, string> = {}) {
-  return await $fetch<HuggingFaceResponse>(`/api/huggingface/${endpoint}`, {
-    headers: sessionToken.value ? { Authorization: `Bearer ${sessionToken.value}` } : undefined,
-    query
-  })
-}
-
-async function connectHuggingFace(automatic = false) {
-  setStatus(automatic ? 'Chargement automatique du dataset…' : 'Connexion au dataset Hugging Face…')
-  connected.value = false
-  const enteredToken = tokenInput.value.trim()
-  sessionToken.value = enteredToken
-  try {
-    const data = await requestHuggingFace('splits')
-    const entries = data.splits ?? []
-    if (!entries.length) throw new Error('Aucune configuration ou aucun split disponible.')
-    datasetSplits.value = entries
-    configs.value = [...new Set(entries.map((entry) => entry.config))]
-    selectedConfig.value = configs.value[0] ?? ''
-    splits.value = [...new Set(entries.filter((entry) => entry.config === selectedConfig.value).map((entry) => entry.split))]
-    selectedSplit.value = splits.value[0] ?? ''
-    connected.value = true
-    tokenInput.value = ''
-    currentPage.value = 0
-    search.value = ''
-    setStatus('Connexion réussie. Chargement du dataset…')
-  } catch (error) {
-    sessionToken.value = ''
-    if (!enteredToken && isAuthError(error)) {
-      setStatus('Ce dataset demande une authentification Hugging Face. Saisis un jeton avec accès en lecture, puis clique sur « Charger le dataset ».', true)
-    } else {
-      setStatus(errorMessage(error), true)
-    }
-  }
-}
-
-function updateSplitsForConfig() {
-  splits.value = [...new Set(
-    (datasetSplits.value ?? []).filter((entry) => entry.config === selectedConfig.value).map((entry) => entry.split)
-  )]
-  selectedSplit.value = splits.value[0] ?? ''
-  currentPage.value = 0
-}
-
-const datasetSplits = ref<HuggingFaceSplit[]>([])
-
-async function loadRemotePage() {
-  if (!connected.value || !selectedConfig.value || !selectedSplit.value) return
+async function loadDownloadedDataset(page: number) {
   requestController?.abort()
   const controller = new AbortController()
   requestController = controller
   loading.value = true
-  setStatus('Chargement des lignes…')
   try {
-    const endpoint = search.value.trim() ? 'search' : 'rows'
-    const query: Record<string, string> = {
-      config: selectedConfig.value,
-      split: selectedSplit.value,
-      offset: String(currentPage.value * pageSize),
-      length: String(pageSize)
-    }
-    if (search.value.trim()) query.query = search.value.trim()
-    const response = await $fetch<HuggingFaceResponse>(`/api/huggingface/${endpoint}`, {
-      headers: sessionToken.value ? { Authorization: `Bearer ${sessionToken.value}` } : undefined,
-      query,
+    const response = await $fetch<DatasetResponse>('/api/local-dataset', {
+      query: {
+        offset: String(page * pageSize),
+        length: String(pageSize),
+        query: search.value.trim()
+      },
       signal: controller.signal
     })
     const columns = (response.features ?? []).map((feature) => feature.name)
     const rows = (response.rows ?? []).map((entry) => entry.row)
     dataset.value = {
-      name: `${datasetId} · ${selectedConfig.value} / ${selectedSplit.value}`,
+      name: `${datasetId} · copie locale`,
       columns,
       rows,
       total: response.num_rows_total ?? rows.length,
-      source: 'remote'
+      source: 'paged'
     }
-    setStatus('Dataset chargé depuis Hugging Face.')
   } catch (error) {
-    if (controller.signal.aborted || (error instanceof Error && error.name === 'AbortError')) return
-    setStatus(errorMessage(error), true)
+    if (controller.signal.aborted) return
+    throw error
   } finally {
     if (requestController === controller) loading.value = false
   }
+}
+
+async function startDownload() {
+  const token = tokenInput.value.trim()
+  if (!token) {
+    setStatus('Saisis un jeton Hugging Face avec accès en lecture au dépôt.', true)
+    return
+  }
+
+  downloadActive.value = true
+  downloadStage.value = 'Démarrage du téléchargement…'
+  downloadDone.value = 0
+  downloadTotal.value = 0
+  setStatus('Le jeton est transmis au processus local de téléchargement.')
+  try {
+    const response = await $fetch<DatasetResponse>('/api/dataset-download', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    tokenInput.value = ''
+    if (response.status === 'complete') {
+      await finishDownload()
+      return
+    }
+    applyDownloadStatus(response)
+    downloadPoll = setInterval(() => { void pollDownload() }, 1500)
+  } catch (error) {
+    downloadActive.value = false
+    setStatus(errorMessage(error), true)
+  }
+}
+
+async function pollDownload() {
+  try {
+    const response = await $fetch<DatasetResponse>('/api/dataset-download-status')
+    applyDownloadStatus(response)
+    if (response.status === 'complete') {
+      clearInterval(downloadPoll)
+      await finishDownload()
+    } else if (response.status === 'error') {
+      clearInterval(downloadPoll)
+      downloadActive.value = false
+      setStatus(response.message || 'Le téléchargement a échoué. Vérifie le jeton et réessaie.', true)
+    }
+  } catch (error) {
+    clearInterval(downloadPoll)
+    downloadActive.value = false
+    setStatus(errorMessage(error), true)
+  }
+}
+
+async function resumeDownloadIfActive() {
+  try {
+    const response = await $fetch<DatasetResponse>('/api/dataset-download-status')
+    if (response.status === 'listing' || response.status === 'starting' || response.status === 'downloading' || response.status === 'indexing') {
+      downloadActive.value = true
+      applyDownloadStatus(response)
+      downloadPoll = setInterval(() => { void pollDownload() }, 1500)
+      return
+    }
+    if (response.status === 'error') {
+      setStatus(response.message || 'Le téléchargement a échoué. Vérifie le jeton et réessaie.', true)
+      return
+    }
+  } catch {
+    // Fall back to prompting for a token.
+  }
+  setStatus('Le dataset n’est pas encore téléchargé. Saisis un jeton Hugging Face avec accès au dépôt pour le récupérer localement.', true)
+}
+
+function applyDownloadStatus(response: DatasetResponse) {
+  downloadStage.value = response.message || 'Téléchargement en cours…'
+  downloadDone.value = response.done ?? 0
+  downloadTotal.value = response.total ?? 0
+  const count = downloadTotal.value ? ` ${downloadDone.value.toLocaleString('fr-FR')} / ${downloadTotal.value.toLocaleString('fr-FR')} fichiers.` : ''
+  setStatus(`${downloadStage.value}${count}`)
+}
+
+async function finishDownload() {
+  downloadActive.value = false
+  localReady.value = true
+  search.value = ''
+  currentPage.value = 0
+  await loadDownloadedDataset(0)
+  setStatus('Dataset téléchargé et chargé depuis le disque local.')
 }
 
 async function loadLocalFile(file?: File) {
@@ -161,9 +201,7 @@ async function loadLocalFile(file?: File) {
     const extension = file.name.split('.').pop()?.toLocaleLowerCase()
     const parsed = extension === 'json' || /^[\s]*[\[{]/.test(text) ? parseJson(text) : parseDelimited(text, extension === 'tsv' ? '\t' : undefined)
     if (!parsed.columns.length) throw new Error('Aucune colonne trouvée dans ce fichier.')
-    dataset.value = { name: file.name, columns: parsed.columns, rows: parsed.rows, total: parsed.rows.length, source: 'local', size: file.size }
-    connected.value = false
-    sessionToken.value = ''
+    dataset.value = { name: file.name, columns: parsed.columns, rows: parsed.rows, total: parsed.rows.length, source: 'file', size: file.size }
     currentPage.value = 0
     search.value = ''
     setStatus('Fichier local chargé. Les données restent dans ce navigateur.')
@@ -259,27 +297,6 @@ function errorMessage(error: unknown) {
   return value?.data?.statusMessage || value?.statusMessage || value?.data?.message || value?.message || 'Impossible de charger les données.'
 }
 
-function isAuthError(error: unknown) {
-  const value = error as { status?: number; statusCode?: number; response?: { status?: number } }
-  const status = value?.statusCode ?? value?.status ?? value?.response?.status
-  return status === 401 || status === 403
-}
-
-function closeDataset() {
-  requestController?.abort()
-  dataset.value = null
-  connected.value = false
-  sessionToken.value = ''
-  configs.value = []
-  splits.value = []
-  datasetSplits.value = []
-  selectedConfig.value = ''
-  selectedSplit.value = ''
-  search.value = ''
-  currentPage.value = 0
-  setStatus('')
-}
-
 function onDrop(event: DragEvent) {
   const file = event.dataTransfer?.files?.[0]
   if (file) void loadLocalFile(file)
@@ -291,8 +308,10 @@ function formatBytes(bytes = 0) {
   return `${(bytes / (1024 * 1024)).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} Mo`
 }
 
-watch(selectedConfig, () => {
-  if (connected.value && datasetSplits.value.length) updateSplitsForConfig()
+onUnmounted(() => {
+  requestController?.abort()
+  clearTimeout(searchTimer)
+  clearInterval(downloadPoll)
 })
 </script>
 
@@ -300,46 +319,38 @@ watch(selectedConfig, () => {
   <main class="shell">
     <header class="page-header">
       <div>
-        <p class="eyebrow">Outil de données · Hugging Face · CSV · TSV · JSON</p>
+        <p class="eyebrow">Dataset local · Hugging Face · pixel art</p>
         <h1>Dataset Viewer</h1>
-        <p class="subtitle">Parcours le dataset pixel art et tes fichiers dans une vue claire et filtrable.</p>
+        <p class="subtitle">Les images et leurs légendes sont téléchargées sur cet ordinateur puis parcourues localement.</p>
       </div>
-      <div class="privacy">Le jeton reste en mémoire pendant la session</div>
+      <div class="privacy">Données du dataset stockées dans le dépôt local</div>
     </header>
 
     <section class="hf-card" aria-labelledby="hfHeading">
       <div class="hf-card-head">
-        <div><h2 id="hfHeading">Dataset Hugging Face</h2><p>Connecte le dataset distant à ce viewer.</p></div>
+        <div><h2 id="hfHeading">{{ localReady ? 'Dataset téléchargé' : 'Télécharger le dataset privé' }}</h2><p>{{ localReady ? 'La copie locale est chargée par défaut.' : 'Un jeton Hugging Face est nécessaire pour récupérer le dépôt complet.' }}</p></div>
         <span class="hf-brand">🤗 HF</span>
       </div>
-      <form class="hf-controls" @submit.prevent="connectHuggingFace">
+      <form v-if="!localReady" class="hf-controls download-controls" @submit.prevent="startDownload">
         <div class="field token-field">
-          <label for="hfToken">Jeton d'accès</label>
-          <input id="hfToken" v-model="tokenInput" type="password" autocomplete="off" placeholder="Jeton avec accès en lecture">
+          <label for="hfToken">Jeton Hugging Face avec accès au dépôt</label>
+          <input id="hfToken" v-model="tokenInput" type="password" autocomplete="off" placeholder="Colle ton jeton ici" :disabled="downloadActive">
         </div>
-        <div class="field">
-          <label for="hfConfig">Configuration</label>
-          <select id="hfConfig" v-model="selectedConfig" :disabled="!configs.length">
-            <option v-for="config in configs" :key="config" :value="config">{{ config }}</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="hfSplit">Split</label>
-          <select id="hfSplit" v-model="selectedSplit" :disabled="!splits.length">
-            <option v-for="split in splits" :key="split" :value="split">{{ split }}</option>
-          </select>
-        </div>
-        <button class="button" type="submit">{{ connected ? 'Reconnecter' : 'Charger le dataset' }}</button>
+        <button class="button" type="submit" :disabled="downloadActive">{{ downloadActive ? 'Téléchargement…' : 'Télécharger localement' }}</button>
       </form>
       <div class="dataset-name">{{ datasetId }}</div>
       <div v-if="status" class="hf-status" :class="{ error: statusError }" role="status">{{ status }}</div>
-      <p class="hf-help">Le jeton n'est jamais enregistré dans le dépôt ni dans le stockage du navigateur. Les requêtes passent par le serveur Nuxt vers l'API Hugging Face.</p>
+      <div v-if="downloadActive" class="download-progress" aria-label="Progression du téléchargement">
+        <div class="progress-track"><div class="progress-fill" :style="{ width: `${downloadProgress}%` }"></div></div>
+        <span>{{ downloadTotal ? `${downloadProgress}%` : 'Connexion…' }}</span>
+      </div>
+      <p class="hf-help">Le jeton est transmis au téléchargeur local et n'est pas enregistré dans le dépôt ni dans le navigateur. Les fichiers téléchargés sont exclus des commits Git.</p>
     </section>
 
     <section class="dropzone" @dragover.prevent @drop.prevent="onDrop">
       <div class="drop-copy">
         <div class="upload-icon" aria-hidden="true">↑</div>
-        <div><strong>Ouvre un fichier local</strong><span>CSV, TSV ou JSON · glisse-dépose ou sélectionne</span></div>
+        <div><strong>Ouvre aussi un fichier local</strong><span>CSV, TSV ou JSON · glisse-dépose ou sélectionne</span></div>
       </div>
       <input ref="fileInput" class="hidden-input" type="file" accept=".csv,.tsv,.json" @change="onFileSelected">
       <button class="button secondary" type="button" @click="fileInput?.click()">Choisir un fichier</button>
@@ -347,23 +358,23 @@ watch(selectedConfig, () => {
 
     <section v-if="!dataset" class="empty-state">
       <div class="empty-mark" aria-hidden="true">▦</div>
-      <h2>Ton aperçu apparaîtra ici</h2>
-      <p>Connecte Hugging Face pour consulter le dataset pixel art ou ouvre un fichier local pour voir ses lignes et ses colonnes.</p>
+      <h2>{{ downloadActive ? 'Préparation du dataset local' : 'Le dataset apparaîtra ici' }}</h2>
+      <p>{{ downloadActive ? 'Les images et leurs légendes sont en cours de téléchargement puis d’indexation.' : 'Télécharge le dépôt avec ton jeton Hugging Face ou ouvre un fichier de données local.' }}</p>
     </section>
 
     <section v-else class="workspace" aria-live="polite">
       <div class="dataset-head">
-        <div class="file-title"><h2>{{ dataset.name }}</h2><p>{{ dataset.source === 'remote' ? 'Hugging Face' : `${formatBytes(dataset.size)} · fichier local` }}</p></div>
-        <button class="button secondary" type="button" @click="closeDataset">Fermer le dataset</button>
+        <div class="file-title"><h2>{{ dataset.name }}</h2><p>{{ dataset.source === 'paged' ? 'Fichiers sur le disque local' : `${formatBytes(dataset.size)} · fichier local` }}</p></div>
+        <button v-if="dataset.source === 'file' && localReady" class="button secondary" type="button" @click="loadDownloadedDataset(0)">Revenir au dataset</button>
       </div>
       <div class="stats">
-        <div class="stat"><span>Lignes</span><strong>{{ totalRows.toLocaleString('fr-FR') }}</strong></div>
+        <div class="stat"><span>Images</span><strong>{{ totalRows.toLocaleString('fr-FR') }}</strong></div>
         <div class="stat"><span>Colonnes</span><strong>{{ dataset.columns.length.toLocaleString('fr-FR') }}</strong></div>
         <div class="stat"><span>Résultats</span><strong>{{ totalRows.toLocaleString('fr-FR') }}</strong></div>
       </div>
       <div class="table-card">
         <div class="table-toolbar">
-          <label class="search-wrap"><input v-model="search" class="search" type="search" placeholder="Rechercher dans les données…" autocomplete="off"></label>
+          <label class="search-wrap"><input v-model="search" class="search" type="search" placeholder="Rechercher dans les légendes et noms…" autocomplete="off"></label>
           <span class="result-count">{{ loading ? 'Chargement…' : `${totalRows.toLocaleString('fr-FR')} résultat${totalRows === 1 ? '' : 's'}` }}</span>
         </div>
         <div class="table-scroll">
@@ -372,7 +383,7 @@ watch(selectedConfig, () => {
             <tbody>
               <tr v-for="(row, rowIndex) in visibleRows" :key="rowIndex">
                 <td v-for="column in dataset.columns" :key="column">
-                  <img v-if="isImageValue(row[column])" :src="imageSource(row[column])" alt="Aperçu du visuel" loading="lazy" class="cell-image">
+                  <img v-if="isImageValue(row[column])" :src="imageSource(row[column])" alt="Pixel art" loading="lazy" class="cell-image">
                   <span v-else :title="stringifyValue(row[column])">{{ stringifyValue(row[column]) }}</span>
                 </td>
               </tr>
@@ -389,6 +400,6 @@ watch(selectedConfig, () => {
         </div>
       </div>
     </section>
-    <footer>Dataset Viewer · les fichiers locaux restent dans ton navigateur</footer>
+    <footer>Dataset Viewer · la copie Hugging Face est lue depuis le disque local</footer>
   </main>
 </template>
