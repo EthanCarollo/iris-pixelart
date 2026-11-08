@@ -15,7 +15,7 @@ Le pilote ne marque pas encore ses captions comme approuvées, et les droits des
 
 ## Lancer sur un PC distant
 
-Le PC distant doit avoir Linux, Git, Python 3.11 ou plus, CUDA et un GPU NVIDIA avec 24 Go de VRAM recommandés. Clone ce dépôt sur ce PC, puis installe JupyterLab dans son environnement Python :
+Le PC distant doit avoir Linux, Git, Python 3.11 ou plus et CUDA. Le notebook tente FP8 et low-VRAM pour les GPU modestes, mais 24 Go de VRAM restent recommandés ; sur 8 Go, le chargement ou l'entraînement peut encore échouer. Clone ce dépôt sur ce PC, puis installe JupyterLab dans son environnement Python :
 
 ```bash
 python3 -m venv .venv
