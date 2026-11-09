@@ -1,5 +1,5 @@
 {
-  "version": "3.2.0",
+  "version": "3.3.0",
   "description": "Dimensions visuelles indépendantes, chacune organisée en arbre. Les étiquettes sont les feuilles ; les branches servent à regrouper les valeurs. Plusieurs dimensions peuvent décrire le même sujet.",
   "hierarchies": {
     "asset_type": {
@@ -176,6 +176,14 @@
       "mixed_scene": {},
       "unknown": {},
       "not_applicable": {}
+    },
+    "visual_quality": {
+      "acceptable": {
+        "clean": {},
+        "minor_issues": {}
+      },
+      "needs_rework": {},
+      "unknown": {}
     }
   },
   "dimensions": {
@@ -228,6 +236,11 @@
       "label": "Décor du fond complexe",
       "definition": "Type de décor identifiable à l’arrière-plan : milieu naturel, construction ou fond abstrait.",
       "applicability": "Uniquement quand background_type vaut complex ; not_applicable pour un fond transparent ou uni. Pour un fond complexe non reconnaissable, choisir unknown. Ne pas supposer une forêt à partir d’une couleur verte."
+    },
+    "visual_quality": {
+      "label": "Qualité visuelle",
+      "definition": "État visuel du fichier et présence de défauts de préparation manifestes, indépendamment du style et de la taille native.",
+      "applicability": "Pour toute image ; évaluer les défauts visibles, pas les droits ni la qualité artistique. Les grands spritesheets et les petits sprites nets peuvent être clean. Privilégier unknown si la résolution ne permet pas de juger."
     }
   },
   "value_descriptions": {
@@ -381,6 +394,13 @@
       "mixed_scene": "Plusieurs décors distincts sont visibles sans type dominant unique.",
       "unknown": "Fond complexe mais décor incertain ou impossible à identifier.",
       "not_applicable": "Fond transparent ou uni : aucun décor complexe à qualifier."
+    },
+    "visual_quality": {
+      "acceptable": "Image exploitable visuellement sans défaut majeur manifeste.",
+      "clean": "Image visiblement nette et complète, sans artefact de compression, découpe accidentelle ou fond parasite évident ; des contours pixelisés voulus sont normaux.",
+      "minor_issues": "Image globalement exploitable mais présentant de petits défauts visibles, tels que quelques pixels parasites ou une légère découpe non essentielle.",
+      "needs_rework": "Défaut manifeste nécessitant une retouche avant usage : sujet fortement coupé, image corrompue ou illisible, artefacts sévères, fond parasite gênant ou plusieurs éléments non séparés quand un sprite unique est attendu. Une planche explicitement identifiée comme telle ne doit pas être pénalisée pour contenir plusieurs sprites.",
+      "unknown": "La qualité ne peut pas être jugée avec confiance, par exemple parce que l’image est trop petite ou ambiguë."
     }
   }
 }
