@@ -1,6 +1,6 @@
 {
-  "version": "2.0.0",
-  "description": "Hiérarchies visuelles indépendantes. Choisir une feuille par dimension ; unknown si incertain et not_applicable si sans objet. Les nœuds intermédiaires organisent les feuilles.",
+  "version": "2.1.0",
+  "description": "Sept dimensions visuelles indépendantes, chacune organisée en arbre. Les étiquettes sont les feuilles ; les branches servent à regrouper les valeurs. Elles ne forment pas une catégorie unique à sept niveaux.",
   "hierarchies": {
     "asset_type": {
       "sprite": {
@@ -42,13 +42,13 @@
       "unknown": {}
     },
     "view": {
-      "horizontal": {
+      "subject_angle": {
         "front": {},
         "side": {},
         "back": {},
         "three_quarter": {}
       },
-      "vertical": {
+      "vertical_angle": {
         "top_down": {},
         "bottom_up": {}
       },
@@ -58,8 +58,8 @@
     },
     "pose": {
       "grounded": {
-        "upright": {
-          "standing": {},
+        "standing": {},
+        "lowered": {
           "kneeling": {},
           "crouching": {},
           "sitting": {}
@@ -108,6 +108,43 @@
       "pixel_art": {},
       "raster_illustration": {},
       "unknown": {}
+    }
+  },
+  "dimensions": {
+    "asset_type": {
+      "label": "Type de fichier visuel",
+      "definition": "Organisation générale de l’image : sprite seul, planche, décor, etc.",
+      "applicability": "Pour toute image ; unknown si sa structure est incertaine."
+    },
+    "subject_type": {
+      "label": "Sujet principal",
+      "definition": "Nature de l’élément dominant visible.",
+      "applicability": "Pour toute image ; unknown si aucun sujet principal ne se distingue."
+    },
+    "view": {
+      "label": "Point de vue",
+      "definition": "Angle sous lequel le sujet ou la scène est représenté, même sans caméra réelle.",
+      "applicability": "Pour un sujet ou une scène dont l’orientation est observable ; mixed pour plusieurs vues, not_applicable si l’angle n’a pas de sens, unknown s’il est incertain."
+    },
+    "pose": {
+      "label": "Pose",
+      "definition": "Position du corps d’un sujet vivant à un instant donné.",
+      "applicability": "Pour un personnage ou une créature identifiable ; not_applicable pour un objet ou un décor, unknown si la pose est masquée ou ambiguë."
+    },
+    "action": {
+      "label": "Action",
+      "definition": "Activité identifiable à partir de l’image, distincte de la position du corps.",
+      "applicability": "Pour un sujet capable d’agir ; not_applicable si sans objet, unknown si une image fixe ne permet pas de conclure. Ne pas deviner un mouvement."
+    },
+    "background_type": {
+      "label": "Fond",
+      "definition": "Nature du fond ou transparence du fichier.",
+      "applicability": "Pour toute image ; unknown si le fond ne peut pas être distingué."
+    },
+    "render_family": {
+      "label": "Style de rendu",
+      "definition": "Famille visuelle générale du rendu.",
+      "applicability": "Pour toute image ; unknown si le rendu est incertain."
     }
   }
 }
