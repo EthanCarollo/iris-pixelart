@@ -55,3 +55,7 @@ Le notebook [`data_structure.ipynb`](dataset/analysis/data_structure.ipynb) pré
 La taxonomie distingue la forme du sujet (`subject_type`), sa structure corporelle (`body_plan`) et les ailes visibles (`wings`), afin de combiner par exemple humanoïde et bipède. Les annotations des anciennes versions restent dans leurs fichiers de travail.
 
 Les définitions de chaque branche et valeur sont directement dans les nœuds du JSON ; elles sont affichées dans le notebook des arbres et transmises au modèle d’annotation.
+
+## Évaluation CLIP
+
+Le notebook [`clip_score.ipynb`](evaluating/clip_score/clip_score.ipynb) compare les images de plusieurs modèles sur les mêmes prompts, avec un tableau apparié et une estimation d'incertitude. Les images doivent être générées avant l'évaluation ; le GPU distant utilisé pour les taxonomies n'est pas nécessaire.

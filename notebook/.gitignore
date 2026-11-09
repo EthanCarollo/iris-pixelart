@@ -3,3 +3,5 @@ training/iris_sprite_lora_work/
 **/.ipynb_checkpoints/
 
 dataset/taxonomy/taxonomy_work/
+
+evaluating/clip_score/work/
