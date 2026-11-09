@@ -42,15 +42,15 @@ Garde cette fenêtre ouverte, puis ouvre `http://localhost:8888` dans ton naviga
 
 ## Analyse et taxonomie visuelle
 
-Ouvrir `dataset/analyse_dataset.ipynb`. La hiérarchie préparée utilise `sprite → vue → pose` ; les rôles de jeu sont retirés des tags et des captions. Les descriptions automatiques peuvent encore comporter des erreurs et nécessitent une vérification visuelle. Le JSONL original est conservé sous `qwen3vl_sprite_training_original.jsonl`. `sprite_taxonomy.py` doit rester à côté du notebook d’entraînement. Les checkpoints existants ne sont pas réentraînés automatiquement.
+Ouvrir `dataset/analysis/analyse_dataset.ipynb`. La hiérarchie préparée utilise `sprite → vue → pose` ; les rôles de jeu sont retirés des tags et des captions. Les descriptions automatiques peuvent encore comporter des erreurs et nécessitent une vérification visuelle. Le JSONL original est conservé sous `qwen3vl_sprite_training_original.jsonl`. `sprite_taxonomy.py` doit rester à côté du notebook d’entraînement. Les checkpoints existants ne sont pas réentraînés automatiquement.
 
 Les images préparées sont placées sur un canevas blanc de 96 × 96 sans agrandissement : les sources qui tiennent dans le canevas conservent leurs pixels 1:1. Les sources dépassant 96 pixels sont réduites en plus proche voisin pour cette configuration ; elles perdent donc des détails. La mention `96x96` dans le prompt désigne le canevas, pas la résolution native du sprite. Les anciens checkpoints ont été entraînés sur la préparation précédente.
 
 ## Annotation des taxonomies
 
-Le notebook [`taxonomie_dataset.ipynb`](dataset/taxonomie_dataset.ipynb) annote les images du dataset local avec Qwen3.8-Flash-Next Gyro-S quantifié via Strata distant selon les hiérarchies de [`taxonomies.json`](dataset/taxonomies.json). Chaque annotation contient les étiquettes et leurs chemins complets. Le lot par défaut est de 10 000 images ; réduis `MAX_IMAGES` pour un essai ou mets-le à `None` pour traiter toutes les images. La progression est conservée dans `dataset/taxonomy_work/` et la dernière cellule publie le lot dans un nouveau dossier du dataset Hugging Face. Les résultats restent à vérifier et ne remplacent pas les annotations existantes.
+Le notebook [`taxonomie_dataset.ipynb`](dataset/taxonomy/taxonomie_dataset.ipynb) annote les images du dataset local avec Qwen3.8-Flash-Next Gyro-S quantifié via Strata distant selon les hiérarchies de [`taxonomies.json`](dataset/taxonomy/taxonomies.json). Chaque annotation contient les étiquettes et leurs chemins complets. Le lot par défaut est de 10 000 images ; réduis `MAX_IMAGES` pour un essai ou mets-le à `None` pour traiter toutes les images. La progression est conservée dans `dataset/taxonomy/taxonomy_work/` et la dernière cellule publie le lot dans un nouveau dossier du dataset Hugging Face. Les résultats restent à vérifier et ne remplacent pas les annotations existantes.
 
-Le notebook [`data_structure.ipynb`](dataset/data_structure.ipynb) présente un exemple de sprite et affiche les arbres avec leurs dimensions. Chaque arbre est indépendant : une vue et une pose peuvent être combinées sans former une seule catégorie.
+Le notebook [`data_structure.ipynb`](dataset/analysis/data_structure.ipynb) présente un exemple de sprite et affiche les arbres avec leurs dimensions. Chaque arbre est indépendant : une vue et une pose peuvent être combinées sans former une seule catégorie.
 
 La taxonomie distingue la forme du sujet (`subject_type`), sa structure corporelle (`body_plan`) et les ailes visibles (`wings`), afin de combiner par exemple humanoïde et bipède. Les annotations des anciennes versions restent dans leurs fichiers de travail.
 
