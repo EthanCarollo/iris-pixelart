@@ -1,6 +1,6 @@
 {
-  "version": "2.1.0",
-  "description": "Sept dimensions visuelles indépendantes, chacune organisée en arbre. Les étiquettes sont les feuilles ; les branches servent à regrouper les valeurs. Elles ne forment pas une catégorie unique à sept niveaux.",
+  "version": "3.0.0",
+  "description": "Dimensions visuelles indépendantes, chacune organisée en arbre. Les étiquettes sont les feuilles ; les branches servent à regrouper les valeurs. Plusieurs dimensions peuvent décrire le même sujet.",
   "hierarchies": {
     "asset_type": {
       "sprite": {
@@ -19,9 +19,25 @@
       "unknown": {}
     },
     "subject_type": {
-      "living": {
-        "character": {},
-        "creature": {}
+      "animate_figure": {
+        "humanoid": {
+          "human_like": {},
+          "anthropomorphic": {},
+          "humanoid_robotic": {},
+          "humanoid_unspecified": {}
+        },
+        "non_humanoid": {
+          "animal_like": {},
+          "insect_like": {},
+          "arachnid_like": {},
+          "serpentine": {},
+          "aquatic_like": {},
+          "amorphous": {},
+          "plant_like": {},
+          "mechanical_non_humanoid": {},
+          "non_humanoid_unspecified": {}
+        },
+        "animate_unspecified": {}
       },
       "inanimate": {
         "object": {},
@@ -108,6 +124,28 @@
       "pixel_art": {},
       "raster_illustration": {},
       "unknown": {}
+    },
+    "body_plan": {
+      "legged": {
+        "biped": {},
+        "quadruped": {},
+        "multiped": {},
+        "legged_unspecified": {}
+      },
+      "legless": {
+        "serpentine_body": {},
+        "fish_like_body": {},
+        "amorphous_body": {},
+        "legless_unspecified": {}
+      },
+      "unknown": {},
+      "not_applicable": {}
+    },
+    "wings": {
+      "wings_present": {},
+      "wings_not_visible": {},
+      "unknown": {},
+      "not_applicable": {}
     }
   },
   "dimensions": {
@@ -117,9 +155,9 @@
       "applicability": "Pour toute image ; unknown si sa structure est incertaine."
     },
     "subject_type": {
-      "label": "Sujet principal",
-      "definition": "Nature de l’élément dominant visible.",
-      "applicability": "Pour toute image ; unknown si aucun sujet principal ne se distingue."
+      "label": "Forme du sujet principal",
+      "definition": "Forme générale visible : humanoïde, animal, insecte, objet, décor ou autre. Une figure humanoïde peut être humaine, anthropomorphe ou mécanique.",
+      "applicability": "Pour toute image ; choisir une forme générale non spécifiée si les détails ne sont pas visibles, ou unknown si aucun sujet principal ne se distingue. Les formes décrivent l’apparence, pas les origines ou le rôle du sujet."
     },
     "view": {
       "label": "Point de vue",
@@ -128,8 +166,8 @@
     },
     "pose": {
       "label": "Pose",
-      "definition": "Position du corps d’un sujet vivant à un instant donné.",
-      "applicability": "Pour un personnage ou une créature identifiable ; not_applicable pour un objet ou un décor, unknown si la pose est masquée ou ambiguë."
+      "definition": "Position du corps d’une figure à un instant donné.",
+      "applicability": "Pour une figure au corps identifiable, y compris mécanique ; not_applicable pour un objet ou un décor, unknown si la pose est masquée ou ambiguë."
     },
     "action": {
       "label": "Action",
@@ -145,6 +183,16 @@
       "label": "Style de rendu",
       "definition": "Famille visuelle générale du rendu.",
       "applicability": "Pour toute image ; unknown si le rendu est incertain."
+    },
+    "body_plan": {
+      "label": "Structure corporelle",
+      "definition": "Organisation visible du corps et nombre de membres porteurs : bipède, quadrupède, multipède ou sans pattes.",
+      "applicability": "Pour une figure à corps identifiable, y compris un robot ; unknown si les membres sont masqués ou difficiles à compter ; not_applicable pour un objet, décor ou effet. Ne pas déduire les jambes hors champ."
+    },
+    "wings": {
+      "label": "Ailes visibles",
+      "definition": "Présence visuelle d’ailes ; wings_not_visible signifie uniquement qu’aucune aile n’est visible sur cette image.",
+      "applicability": "Pour une figure dont le corps est identifiable ; unknown si le cadrage ou la résolution ne permet pas de conclure ; not_applicable pour un objet, décor ou effet."
     }
   }
 }
