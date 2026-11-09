@@ -1,73 +1,113 @@
 {
-  "version": "1.0.0",
-  "description": "Taxonomie visuelle : choisir une valeur par champ ; unknown si incertain, not_applicable si le champ ne concerne pas l'image.",
-  "fields": {
-    "asset_type": [
-      "single_sprite",
-      "sprite_sheet",
-      "animation_strip",
-      "tile_set",
-      "background",
-      "unknown"
-    ],
-    "subject_type": [
-      "character",
-      "creature",
-      "object",
-      "environment",
-      "typography",
-      "interface",
-      "effect",
-      "projectile",
-      "weapon",
-      "unknown"
-    ],
-    "view": [
-      "front",
-      "side",
-      "back",
-      "three_quarter",
-      "top_down",
-      "mixed",
-      "unknown",
-      "not_applicable"
-    ],
-    "pose": [
-      "standing",
-      "airborne",
-      "flying",
-      "lying",
-      "prone",
-      "crouching",
-      "kneeling",
-      "sitting",
-      "unknown",
-      "not_applicable"
-    ],
-    "action": [
-      "idle",
-      "walk",
-      "run",
-      "attack_melee",
-      "attack_ranged",
-      "jump",
-      "fall",
-      "fly",
-      "defeat_or_death",
-      "emote",
-      "unknown",
-      "not_applicable"
-    ],
-    "background_type": [
-      "transparent",
-      "solid_color",
-      "complex",
-      "unknown"
-    ],
-    "render_family": [
-      "pixel_art",
-      "raster_illustration",
-      "unknown"
-    ]
+  "version": "2.0.0",
+  "description": "Hiérarchies visuelles indépendantes. Choisir une feuille par dimension ; unknown si incertain et not_applicable si sans objet. Les nœuds intermédiaires organisent les feuilles.",
+  "hierarchies": {
+    "asset_type": {
+      "sprite": {
+        "single_sprite": {},
+        "sprite_collection": {
+          "sprite_sheet": {},
+          "animation_strip": {}
+        }
+      },
+      "tile_set": {},
+      "background": {},
+      "ui_asset": {
+        "interface_element": {},
+        "font_glyph": {}
+      },
+      "unknown": {}
+    },
+    "subject_type": {
+      "living": {
+        "character": {},
+        "creature": {}
+      },
+      "inanimate": {
+        "object": {},
+        "equipment": {
+          "weapon": {},
+          "armor": {}
+        },
+        "projectile": {}
+      },
+      "scene": {
+        "environment": {}
+      },
+      "graphic": {
+        "typography": {},
+        "interface": {},
+        "effect": {}
+      },
+      "unknown": {}
+    },
+    "view": {
+      "horizontal": {
+        "front": {},
+        "side": {},
+        "back": {},
+        "three_quarter": {}
+      },
+      "vertical": {
+        "top_down": {},
+        "bottom_up": {}
+      },
+      "mixed": {},
+      "unknown": {},
+      "not_applicable": {}
+    },
+    "pose": {
+      "grounded": {
+        "upright": {
+          "standing": {},
+          "kneeling": {},
+          "crouching": {},
+          "sitting": {}
+        },
+        "horizontal": {
+          "lying": {},
+          "prone": {}
+        }
+      },
+      "in_air": {
+        "airborne": {},
+        "flying": {}
+      },
+      "unknown": {},
+      "not_applicable": {}
+    },
+    "action": {
+      "stationary": {
+        "idle": {},
+        "emote": {}
+      },
+      "movement": {
+        "walk": {},
+        "run": {},
+        "jump": {},
+        "fall": {},
+        "fly": {}
+      },
+      "combat": {
+        "attack_melee": {},
+        "attack_ranged": {}
+      },
+      "defeat_or_death": {},
+      "unknown": {},
+      "not_applicable": {}
+    },
+    "background_type": {
+      "transparent": {},
+      "opaque": {
+        "solid_color": {},
+        "complex": {}
+      },
+      "unknown": {}
+    },
+    "render_family": {
+      "pixel_art": {},
+      "raster_illustration": {},
+      "unknown": {}
+    }
   }
 }
