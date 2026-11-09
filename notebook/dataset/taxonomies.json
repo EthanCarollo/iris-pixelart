@@ -1,189 +1,597 @@
 {
-  "version": "3.3.0",
+  "version": "3.3.1",
   "description": "Dimensions visuelles indépendantes, chacune organisée en arbre. Les étiquettes sont les feuilles ; les branches servent à regrouper les valeurs. Plusieurs dimensions peuvent décrire le même sujet.",
   "hierarchies": {
     "asset_type": {
       "sprite": {
-        "single_sprite": {},
-        "sprite_collection": {
-          "sprite_sheet": {},
-          "animation_strip": {}
+        "description": "Éléments graphiques représentant un ou plusieurs sprites.",
+        "children": {
+          "single_sprite": {
+            "description": "Une seule image ou pose de sprite, sans grille d’autres sprites.",
+            "children": {}
+          },
+          "sprite_collection": {
+            "description": "Plusieurs sprites ou frames réunis dans une même image.",
+            "children": {
+              "sprite_sheet": {
+                "description": "Planche contenant plusieurs sprites ou frames, pas nécessairement rangés en séquence.",
+                "children": {}
+              },
+              "animation_strip": {
+                "description": "Bande de frames successives d’une même animation.",
+                "children": {}
+              }
+            }
+          }
         }
       },
-      "tile_set": {},
-      "background": {},
-      "ui_asset": {
-        "interface_element": {},
-        "font_glyph": {}
+      "tile_set": {
+        "description": "Ensemble de tuiles destinées à composer des décors ou niveaux.",
+        "children": {}
       },
-      "unknown": {}
+      "background": {
+        "description": "Image de décor ou de fond, plutôt qu’un sprite isolé.",
+        "children": {}
+      },
+      "ui_asset": {
+        "description": "Élément destiné visuellement à une interface ou à du texte.",
+        "children": {
+          "interface_element": {
+            "description": "Bouton, cadre, icône d’interface ou autre élément de HUD.",
+            "children": {}
+          },
+          "font_glyph": {
+            "description": "Glyphe ou caractère typographique isolé.",
+            "children": {}
+          }
+        }
+      },
+      "unknown": {
+        "description": "Information incertaine, masquée ou impossible à déterminer à partir de cette image.",
+        "children": {}
+      }
     },
     "subject_type": {
       "animate_figure": {
-        "humanoid": {
-          "human_like": {},
-          "anthropomorphic": {},
-          "humanoid_robotic": {},
-          "humanoid_unspecified": {}
-        },
-        "non_humanoid": {
-          "animal_like": {},
-          "insect_like": {},
-          "arachnid_like": {},
-          "serpentine": {},
-          "aquatic_like": {},
-          "amorphous": {},
-          "plant_like": {},
-          "mechanical_non_humanoid": {},
-          "non_humanoid_unspecified": {}
-        },
-        "animate_unspecified": {}
+        "description": "Figure visuellement identifiable comme un être ou un personnage animé, y compris un robot.",
+        "children": {
+          "humanoid": {
+            "description": "Figure à silhouette globalement humaine, généralement avec tête, torse et membres disposés comme ceux d’un humain.",
+            "children": {
+              "human_like": {
+                "description": "Humanoïde ressemblant visiblement à un humain ; les vêtements ou une armure seuls ne suffisent pas à déduire une espèce.",
+                "children": {}
+              },
+              "anthropomorphic": {
+                "description": "Humanoïde avec des traits clairement animaux ou non humains, comme un museau ou des oreilles animales.",
+                "children": {}
+              },
+              "humanoid_robotic": {
+                "description": "Figure humanoïde présentant des éléments mécaniques ou robotiques clairement visibles.",
+                "children": {}
+              },
+              "humanoid_unspecified": {
+                "description": "Silhouette humanoïde reconnaissable dont les traits ne permettent pas de choisir un sous-type.",
+                "children": {}
+              }
+            }
+          },
+          "non_humanoid": {
+            "description": "Figure animée dont le corps ne ressemble pas globalement à une silhouette humaine.",
+            "children": {
+              "animal_like": {
+                "description": "Figure non humanoïde ressemblant visuellement à un animal terrestre ou à un oiseau.",
+                "children": {}
+              },
+              "insect_like": {
+                "description": "Figure non humanoïde ressemblant à un insecte, par exemple avec six pattes ou des antennes visibles.",
+                "children": {}
+              },
+              "arachnid_like": {
+                "description": "Figure non humanoïde ressemblant à une araignée ou un scorpion, par sa forme ou ses nombreuses pattes visibles.",
+                "children": {}
+              },
+              "serpentine": {
+                "description": "Figure non humanoïde dont le corps long et souple évoque un serpent.",
+                "children": {}
+              },
+              "aquatic_like": {
+                "description": "Figure non humanoïde évoquant visiblement un poisson ou un autre animal aquatique.",
+                "children": {}
+              },
+              "amorphous": {
+                "description": "Figure non humanoïde sans forme corporelle rigide identifiable, comme une masse ou un slime.",
+                "children": {}
+              },
+              "plant_like": {
+                "description": "Figure animée non humanoïde dont l’apparence évoque une plante.",
+                "children": {}
+              },
+              "mechanical_non_humanoid": {
+                "description": "Figure non humanoïde présentant clairement une structure robotique ou mécanique.",
+                "children": {}
+              },
+              "non_humanoid_unspecified": {
+                "description": "Figure non humanoïde identifiable, mais dont le type précis reste incertain.",
+                "children": {}
+              }
+            }
+          },
+          "animate_unspecified": {
+            "description": "Figure animée identifiable dont la silhouette ne permet pas de choisir humanoïde ou non humanoïde.",
+            "children": {}
+          }
+        }
       },
       "inanimate": {
-        "object": {},
-        "equipment": {
-          "weapon": {},
-          "armor": {}
-        },
-        "projectile": {}
+        "description": "Objet ou élément visiblement non animé.",
+        "children": {
+          "object": {
+            "description": "Objet isolé ne correspondant pas clairement à une catégorie plus précise.",
+            "children": {}
+          },
+          "equipment": {
+            "description": "Objet porté ou utilisé comme équipement.",
+            "children": {
+              "weapon": {
+                "description": "Objet identifiable comme arme, par exemple épée, arc ou lance.",
+                "children": {}
+              },
+              "armor": {
+                "description": "Pièce d’armure ou de protection isolée.",
+                "children": {}
+              }
+            }
+          },
+          "projectile": {
+            "description": "Projectile ou missile identifiable comme objet indépendant.",
+            "children": {}
+          }
+        }
       },
       "scene": {
-        "environment": {}
+        "description": "Scène ou décor plutôt qu’un sujet isolé.",
+        "children": {
+          "environment": {
+            "description": "Éléments de décor ou environnement, comme terrain, végétation ou architecture.",
+            "children": {}
+          }
+        }
       },
       "graphic": {
-        "typography": {},
-        "interface": {},
-        "effect": {}
+        "description": "Élément graphique, texte, interface ou effet visuel.",
+        "children": {
+          "typography": {
+            "description": "Texte, lettre ou symbole typographique.",
+            "children": {}
+          },
+          "interface": {
+            "description": "Élément visuel d’interface, par exemple bouton, barre ou cadre.",
+            "children": {}
+          },
+          "effect": {
+            "description": "Effet visuel tel que fumée, étincelle, explosion ou aura.",
+            "children": {}
+          }
+        }
       },
-      "unknown": {}
+      "unknown": {
+        "description": "Information incertaine, masquée ou impossible à déterminer à partir de cette image.",
+        "children": {}
+      }
     },
     "view": {
       "subject_angle": {
-        "front": {},
-        "side": {},
-        "back": {},
-        "three_quarter": {}
+        "description": "Vue principalement définie par l’orientation horizontale du sujet.",
+        "children": {
+          "front": {
+            "description": "Sujet ou scène vu principalement de face.",
+            "children": {}
+          },
+          "side": {
+            "description": "Sujet vu principalement de profil, depuis un côté.",
+            "children": {}
+          },
+          "back": {
+            "description": "Sujet vu principalement de dos.",
+            "children": {}
+          },
+          "three_quarter": {
+            "description": "Sujet vu en angle oblique, entre la face ou le dos et le profil.",
+            "children": {}
+          }
+        }
       },
       "vertical_angle": {
-        "top_down": {},
-        "bottom_up": {}
+        "description": "Vue principalement définie par un angle au-dessus ou au-dessous du sujet.",
+        "children": {
+          "top_down": {
+            "description": "Vue depuis le dessus ou nettement en plongée.",
+            "children": {}
+          },
+          "bottom_up": {
+            "description": "Vue depuis le dessous ou nettement en contre-plongée.",
+            "children": {}
+          }
+        }
       },
-      "mixed": {},
-      "unknown": {},
-      "not_applicable": {}
+      "mixed": {
+        "description": "Plusieurs points de vue distincts sont visibles dans la même image.",
+        "children": {}
+      },
+      "unknown": {
+        "description": "Information incertaine, masquée ou impossible à déterminer à partir de cette image.",
+        "children": {}
+      },
+      "not_applicable": {
+        "description": "Cette dimension ne s’applique pas au sujet ou au contenu de cette image.",
+        "children": {}
+      }
     },
     "pose": {
       "grounded": {
-        "standing": {},
-        "lowered": {
-          "kneeling": {},
-          "crouching": {},
-          "sitting": {}
-        },
-        "horizontal": {
-          "lying": {},
-          "prone": {}
+        "description": "Position du corps paraissant en appui sur une surface.",
+        "children": {
+          "standing": {
+            "description": "Corps en position debout.",
+            "children": {}
+          },
+          "lowered": {
+            "description": "Corps abaissé ou placé près de la surface.",
+            "children": {
+              "kneeling": {
+                "description": "Corps en appui sur un ou les deux genoux.",
+                "children": {}
+              },
+              "crouching": {
+                "description": "Corps accroupi, les jambes repliées sous le corps.",
+                "children": {}
+              },
+              "sitting": {
+                "description": "Corps assis, le poids reposant sur le bassin ou une surface.",
+                "children": {}
+              }
+            }
+          },
+          "horizontal": {
+            "description": "Corps allongé approximativement à l’horizontale.",
+            "children": {
+              "lying": {
+                "description": "Corps allongé sans orientation ventrale clairement identifiable.",
+                "children": {}
+              },
+              "prone": {
+                "description": "Corps allongé sur le ventre ou face contre terre.",
+                "children": {}
+              }
+            }
+          }
         }
       },
       "in_air": {
-        "airborne": {},
-        "flying": {}
+        "description": "Corps qui paraît ne pas être en appui sur une surface.",
+        "children": {
+          "airborne": {
+            "description": "Corps en suspension, sans vol clairement identifiable.",
+            "children": {}
+          },
+          "flying": {
+            "description": "Corps dans une posture de vol visiblement identifiable.",
+            "children": {}
+          }
+        }
       },
-      "unknown": {},
-      "not_applicable": {}
+      "unknown": {
+        "description": "Information incertaine, masquée ou impossible à déterminer à partir de cette image.",
+        "children": {}
+      },
+      "not_applicable": {
+        "description": "Cette dimension ne s’applique pas au sujet ou au contenu de cette image.",
+        "children": {}
+      }
     },
     "action": {
       "stationary": {
-        "idle": {},
-        "emote": {}
+        "description": "Activité sans déplacement clairement visible.",
+        "children": {
+          "idle": {
+            "description": "Sujet manifestement au repos ; ne pas déduire une animation idle d’une image ambiguë.",
+            "children": {}
+          },
+          "emote": {
+            "description": "Expression ou geste communicatif clairement visible.",
+            "children": {}
+          }
+        }
       },
       "movement": {
-        "walk": {},
-        "run": {},
-        "jump": {},
-        "fall": {},
-        "fly": {}
+        "description": "Déplacement ou mouvement identifiable sur l’image.",
+        "children": {
+          "walk": {
+            "description": "Marche clairement suggérée par la posture ou le contexte visuel.",
+            "children": {}
+          },
+          "run": {
+            "description": "Course clairement suggérée, distincte d’une marche.",
+            "children": {}
+          },
+          "jump": {
+            "description": "Saut clairement identifiable.",
+            "children": {}
+          },
+          "fall": {
+            "description": "Chute clairement identifiable.",
+            "children": {}
+          },
+          "fly": {
+            "description": "Vol clairement identifiable comme action.",
+            "children": {}
+          }
+        }
       },
       "combat": {
-        "attack_melee": {},
-        "attack_ranged": {}
+        "description": "Action de combat clairement visible.",
+        "children": {
+          "attack_melee": {
+            "description": "Attaque rapprochée clairement identifiable, avec ou sans arme.",
+            "children": {}
+          },
+          "attack_ranged": {
+            "description": "Attaque à distance clairement identifiable, par exemple tir ou lancement.",
+            "children": {}
+          }
+        }
       },
-      "defeat_or_death": {},
-      "unknown": {},
-      "not_applicable": {}
+      "defeat_or_death": {
+        "description": "Action ou état de défaite clairement représenté ; ne pas déduire la mort d’une simple position allongée.",
+        "children": {}
+      },
+      "unknown": {
+        "description": "Information incertaine, masquée ou impossible à déterminer à partir de cette image.",
+        "children": {}
+      },
+      "not_applicable": {
+        "description": "Cette dimension ne s’applique pas au sujet ou au contenu de cette image.",
+        "children": {}
+      }
     },
     "background_type": {
-      "transparent": {},
-      "opaque": {
-        "solid_color": {},
-        "complex": {}
+      "transparent": {
+        "description": "L’image contient des pixels transparents ; cette information peut provenir du canal alpha.",
+        "children": {}
       },
-      "unknown": {}
+      "opaque": {
+        "description": "Le fichier ne présente pas de transparence visible.",
+        "children": {
+          "solid_color": {
+            "description": "Fond opaque d’une seule couleur ou approximativement uni.",
+            "children": {}
+          },
+          "complex": {
+            "description": "Fond opaque avec des motifs, objets ou décor distincts.",
+            "children": {}
+          }
+        }
+      },
+      "unknown": {
+        "description": "Information incertaine, masquée ou impossible à déterminer à partir de cette image.",
+        "children": {}
+      }
     },
     "render_family": {
-      "pixel_art": {},
-      "raster_illustration": {},
-      "unknown": {}
+      "pixel_art": {
+        "description": "Rendu volontairement construit à partir de pixels visibles et de contours discrets.",
+        "children": {}
+      },
+      "raster_illustration": {
+        "description": "Illustration matricielle dont le rendu ne présente pas clairement les caractéristiques du pixel art.",
+        "children": {}
+      },
+      "unknown": {
+        "description": "Information incertaine, masquée ou impossible à déterminer à partir de cette image.",
+        "children": {}
+      }
     },
     "body_plan": {
       "legged": {
-        "biped": {},
-        "quadruped": {},
-        "multiped": {},
-        "legged_unspecified": {}
+        "description": "Figure présentant des membres porteurs ou des jambes visibles.",
+        "children": {
+          "biped": {
+            "description": "Deux membres porteurs visibles ; une posture humaine ne suffit pas si les jambes sont masquées.",
+            "children": {}
+          },
+          "quadruped": {
+            "description": "Quatre membres porteurs visibles.",
+            "children": {}
+          },
+          "multiped": {
+            "description": "Plus de quatre membres porteurs visibles.",
+            "children": {}
+          },
+          "legged_unspecified": {
+            "description": "Des jambes ou membres porteurs sont visibles mais leur nombre reste incertain.",
+            "children": {}
+          }
+        }
       },
       "legless": {
-        "serpentine_body": {},
-        "fish_like_body": {},
-        "amorphous_body": {},
-        "legless_unspecified": {}
+        "description": "Figure dont la structure visible ne comporte pas de jambes identifiables.",
+        "children": {
+          "serpentine_body": {
+            "description": "Corps allongé et souple sans jambes visibles, évoquant un serpent.",
+            "children": {}
+          },
+          "fish_like_body": {
+            "description": "Corps sans jambes visibles évoquant un poisson, éventuellement avec nageoires.",
+            "children": {}
+          },
+          "amorphous_body": {
+            "description": "Corps sans jambes visibles et sans structure rigide identifiable.",
+            "children": {}
+          },
+          "legless_unspecified": {
+            "description": "Corps sans jambes visibles dont la structure précise est incertaine.",
+            "children": {}
+          }
+        }
       },
-      "unknown": {},
-      "not_applicable": {}
+      "unknown": {
+        "description": "Information incertaine, masquée ou impossible à déterminer à partir de cette image.",
+        "children": {}
+      },
+      "not_applicable": {
+        "description": "Cette dimension ne s’applique pas au sujet ou au contenu de cette image.",
+        "children": {}
+      }
     },
     "wings": {
-      "wings_present": {},
-      "wings_not_visible": {},
-      "unknown": {},
-      "not_applicable": {}
+      "wings_present": {
+        "description": "Une ou plusieurs ailes sont clairement visibles.",
+        "children": {}
+      },
+      "wings_not_visible": {
+        "description": "Aucune aile n’est visible alors que le cadrage et la résolution permettent de l’évaluer ; ne prouve pas que le sujet n’en possède pas.",
+        "children": {}
+      },
+      "unknown": {
+        "description": "Information incertaine, masquée ou impossible à déterminer à partir de cette image.",
+        "children": {}
+      },
+      "not_applicable": {
+        "description": "Cette dimension ne s’applique pas au sujet ou au contenu de cette image.",
+        "children": {}
+      }
     },
     "background_scene": {
       "natural": {
-        "forest": {},
-        "grassland": {},
-        "desert": {},
-        "mountain": {},
-        "cave": {},
-        "coast": {},
-        "underwater": {},
-        "snow_or_ice": {},
-        "swamp": {},
-        "volcanic": {},
-        "sky_or_space": {},
-        "natural_unspecified": {}
+        "description": "Décor principalement composé d’éléments naturels.",
+        "children": {
+          "forest": {
+            "description": "Décor avec arbres ou végétation arborée formant une forêt.",
+            "children": {}
+          },
+          "grassland": {
+            "description": "Plaine, prairie ou champ principalement couvert d’herbe.",
+            "children": {}
+          },
+          "desert": {
+            "description": "Décor aride, sableux ou désertique clairement identifiable.",
+            "children": {}
+          },
+          "mountain": {
+            "description": "Paysage dominé par des montagnes ou reliefs rocheux élevés.",
+            "children": {}
+          },
+          "cave": {
+            "description": "Intérieur souterrain naturel ou grotte reconnaissable.",
+            "children": {}
+          },
+          "coast": {
+            "description": "Rivage, plage ou bord de mer identifiable.",
+            "children": {}
+          },
+          "underwater": {
+            "description": "Scène représentée sous l’eau.",
+            "children": {}
+          },
+          "snow_or_ice": {
+            "description": "Paysage dominé par la neige ou la glace.",
+            "children": {}
+          },
+          "swamp": {
+            "description": "Marécage ou zone humide reconnaissable.",
+            "children": {}
+          },
+          "volcanic": {
+            "description": "Décor volcanique avec lave ou signes géologiques visibles.",
+            "children": {}
+          },
+          "sky_or_space": {
+            "description": "Ciel ouvert ou espace cosmique comme décor principal.",
+            "children": {}
+          },
+          "natural_unspecified": {
+            "description": "Décor naturel reconnaissable mais plus précis impossible.",
+            "children": {}
+          }
+        }
       },
       "built": {
-        "city_or_village": {},
-        "castle_or_palace": {},
-        "dungeon": {},
-        "house_interior": {},
-        "industrial": {},
-        "temple": {},
-        "spaceship": {},
-        "built_unspecified": {}
+        "description": "Décor principalement constitué de constructions.",
+        "children": {
+          "city_or_village": {
+            "description": "Rue, bâtiments ou ensemble urbain ou villageois.",
+            "children": {}
+          },
+          "castle_or_palace": {
+            "description": "Château, palais ou architecture clairement associée.",
+            "children": {}
+          },
+          "dungeon": {
+            "description": "Intérieur construit souterrain de type donjon, cellule ou fortification.",
+            "children": {}
+          },
+          "house_interior": {
+            "description": "Pièce ou intérieur domestique identifiable.",
+            "children": {}
+          },
+          "industrial": {
+            "description": "Usine, atelier industriel ou structures mécaniques industrielles.",
+            "children": {}
+          },
+          "temple": {
+            "description": "Temple ou édifice religieux identifiable visuellement.",
+            "children": {}
+          },
+          "spaceship": {
+            "description": "Intérieur ou structure évoquant clairement un vaisseau spatial.",
+            "children": {}
+          },
+          "built_unspecified": {
+            "description": "Décor construit reconnaissable mais plus précis impossible.",
+            "children": {}
+          }
+        }
       },
-      "abstract": {},
-      "mixed_scene": {},
-      "unknown": {},
-      "not_applicable": {}
+      "abstract": {
+        "description": "Fond complexe non figuratif, motif ou composition abstraite.",
+        "children": {}
+      },
+      "mixed_scene": {
+        "description": "Plusieurs décors distincts sont visibles sans type dominant unique.",
+        "children": {}
+      },
+      "unknown": {
+        "description": "Fond complexe mais décor incertain ou impossible à identifier.",
+        "children": {}
+      },
+      "not_applicable": {
+        "description": "Fond transparent ou uni : aucun décor complexe à qualifier.",
+        "children": {}
+      }
     },
     "visual_quality": {
       "acceptable": {
-        "clean": {},
-        "minor_issues": {}
+        "description": "Image exploitable visuellement sans défaut majeur manifeste.",
+        "children": {
+          "clean": {
+            "description": "Image visiblement nette et complète, sans artefact de compression, découpe accidentelle ou fond parasite évident ; des contours pixelisés voulus sont normaux.",
+            "children": {}
+          },
+          "minor_issues": {
+            "description": "Image globalement exploitable mais présentant de petits défauts visibles, tels que quelques pixels parasites ou une légère découpe non essentielle.",
+            "children": {}
+          }
+        }
       },
-      "needs_rework": {},
-      "unknown": {}
+      "needs_rework": {
+        "description": "Défaut manifeste nécessitant une retouche avant usage : sujet fortement coupé, image corrompue ou illisible, artefacts sévères, fond parasite gênant ou plusieurs éléments non séparés quand un sprite unique est attendu. Une planche explicitement identifiée comme telle ne doit pas être pénalisée pour contenir plusieurs sprites.",
+        "children": {}
+      },
+      "unknown": {
+        "description": "La qualité ne peut pas être jugée avec confiance, par exemple parce que l’image est trop petite ou ambiguë.",
+        "children": {}
+      }
     }
   },
   "dimensions": {
@@ -243,164 +651,11 @@
       "applicability": "Pour toute image ; évaluer les défauts visibles, pas les droits ni la qualité artistique. Les grands spritesheets et les petits sprites nets peuvent être clean. Privilégier unknown si la résolution ne permet pas de juger."
     }
   },
-  "value_descriptions": {
-    "asset_type": {
-      "sprite": "Éléments graphiques représentant un ou plusieurs sprites.",
-      "single_sprite": "Une seule image ou pose de sprite, sans grille d’autres sprites.",
-      "sprite_collection": "Plusieurs sprites ou frames réunis dans une même image.",
-      "sprite_sheet": "Planche contenant plusieurs sprites ou frames, pas nécessairement rangés en séquence.",
-      "animation_strip": "Bande de frames successives d’une même animation.",
-      "tile_set": "Ensemble de tuiles destinées à composer des décors ou niveaux.",
-      "background": "Image de décor ou de fond, plutôt qu’un sprite isolé.",
-      "ui_asset": "Élément destiné visuellement à une interface ou à du texte.",
-      "interface_element": "Bouton, cadre, icône d’interface ou autre élément de HUD.",
-      "font_glyph": "Glyphe ou caractère typographique isolé.",
-      "unknown": "Information incertaine, masquée ou impossible à déterminer à partir de cette image."
-    },
-    "subject_type": {
-      "animate_figure": "Figure visuellement identifiable comme un être ou un personnage animé, y compris un robot.",
-      "humanoid": "Figure à silhouette globalement humaine, généralement avec tête, torse et membres disposés comme ceux d’un humain.",
-      "human_like": "Humanoïde ressemblant visiblement à un humain ; les vêtements ou une armure seuls ne suffisent pas à déduire une espèce.",
-      "anthropomorphic": "Humanoïde avec des traits clairement animaux ou non humains, comme un museau ou des oreilles animales.",
-      "humanoid_robotic": "Figure humanoïde présentant des éléments mécaniques ou robotiques clairement visibles.",
-      "humanoid_unspecified": "Silhouette humanoïde reconnaissable dont les traits ne permettent pas de choisir un sous-type.",
-      "non_humanoid": "Figure animée dont le corps ne ressemble pas globalement à une silhouette humaine.",
-      "animal_like": "Figure non humanoïde ressemblant visuellement à un animal terrestre ou à un oiseau.",
-      "insect_like": "Figure non humanoïde ressemblant à un insecte, par exemple avec six pattes ou des antennes visibles.",
-      "arachnid_like": "Figure non humanoïde ressemblant à une araignée ou un scorpion, par sa forme ou ses nombreuses pattes visibles.",
-      "serpentine": "Figure non humanoïde dont le corps long et souple évoque un serpent.",
-      "aquatic_like": "Figure non humanoïde évoquant visiblement un poisson ou un autre animal aquatique.",
-      "amorphous": "Figure non humanoïde sans forme corporelle rigide identifiable, comme une masse ou un slime.",
-      "plant_like": "Figure animée non humanoïde dont l’apparence évoque une plante.",
-      "mechanical_non_humanoid": "Figure non humanoïde présentant clairement une structure robotique ou mécanique.",
-      "non_humanoid_unspecified": "Figure non humanoïde identifiable, mais dont le type précis reste incertain.",
-      "animate_unspecified": "Figure animée identifiable dont la silhouette ne permet pas de choisir humanoïde ou non humanoïde.",
-      "inanimate": "Objet ou élément visiblement non animé.",
-      "object": "Objet isolé ne correspondant pas clairement à une catégorie plus précise.",
-      "equipment": "Objet porté ou utilisé comme équipement.",
-      "weapon": "Objet identifiable comme arme, par exemple épée, arc ou lance.",
-      "armor": "Pièce d’armure ou de protection isolée.",
-      "projectile": "Projectile ou missile identifiable comme objet indépendant.",
-      "scene": "Scène ou décor plutôt qu’un sujet isolé.",
-      "environment": "Éléments de décor ou environnement, comme terrain, végétation ou architecture.",
-      "graphic": "Élément graphique, texte, interface ou effet visuel.",
-      "typography": "Texte, lettre ou symbole typographique.",
-      "interface": "Élément visuel d’interface, par exemple bouton, barre ou cadre.",
-      "effect": "Effet visuel tel que fumée, étincelle, explosion ou aura.",
-      "unknown": "Information incertaine, masquée ou impossible à déterminer à partir de cette image."
-    },
-    "view": {
-      "subject_angle": "Vue principalement définie par l’orientation horizontale du sujet.",
-      "front": "Sujet ou scène vu principalement de face.",
-      "side": "Sujet vu principalement de profil, depuis un côté.",
-      "back": "Sujet vu principalement de dos.",
-      "three_quarter": "Sujet vu en angle oblique, entre la face ou le dos et le profil.",
-      "vertical_angle": "Vue principalement définie par un angle au-dessus ou au-dessous du sujet.",
-      "top_down": "Vue depuis le dessus ou nettement en plongée.",
-      "bottom_up": "Vue depuis le dessous ou nettement en contre-plongée.",
-      "mixed": "Plusieurs points de vue distincts sont visibles dans la même image.",
-      "unknown": "Information incertaine, masquée ou impossible à déterminer à partir de cette image.",
-      "not_applicable": "Cette dimension ne s’applique pas au sujet ou au contenu de cette image."
-    },
-    "pose": {
-      "grounded": "Position du corps paraissant en appui sur une surface.",
-      "standing": "Corps en position debout.",
-      "lowered": "Corps abaissé ou placé près de la surface.",
-      "kneeling": "Corps en appui sur un ou les deux genoux.",
-      "crouching": "Corps accroupi, les jambes repliées sous le corps.",
-      "sitting": "Corps assis, le poids reposant sur le bassin ou une surface.",
-      "horizontal": "Corps allongé approximativement à l’horizontale.",
-      "lying": "Corps allongé sans orientation ventrale clairement identifiable.",
-      "prone": "Corps allongé sur le ventre ou face contre terre.",
-      "in_air": "Corps qui paraît ne pas être en appui sur une surface.",
-      "airborne": "Corps en suspension, sans vol clairement identifiable.",
-      "flying": "Corps dans une posture de vol visiblement identifiable.",
-      "unknown": "Information incertaine, masquée ou impossible à déterminer à partir de cette image.",
-      "not_applicable": "Cette dimension ne s’applique pas au sujet ou au contenu de cette image."
-    },
-    "action": {
-      "stationary": "Activité sans déplacement clairement visible.",
-      "idle": "Sujet manifestement au repos ; ne pas déduire une animation idle d’une image ambiguë.",
-      "emote": "Expression ou geste communicatif clairement visible.",
-      "movement": "Déplacement ou mouvement identifiable sur l’image.",
-      "walk": "Marche clairement suggérée par la posture ou le contexte visuel.",
-      "run": "Course clairement suggérée, distincte d’une marche.",
-      "jump": "Saut clairement identifiable.",
-      "fall": "Chute clairement identifiable.",
-      "fly": "Vol clairement identifiable comme action.",
-      "combat": "Action de combat clairement visible.",
-      "attack_melee": "Attaque rapprochée clairement identifiable, avec ou sans arme.",
-      "attack_ranged": "Attaque à distance clairement identifiable, par exemple tir ou lancement.",
-      "defeat_or_death": "Action ou état de défaite clairement représenté ; ne pas déduire la mort d’une simple position allongée.",
-      "unknown": "Information incertaine, masquée ou impossible à déterminer à partir de cette image.",
-      "not_applicable": "Cette dimension ne s’applique pas au sujet ou au contenu de cette image."
-    },
-    "background_type": {
-      "transparent": "L’image contient des pixels transparents ; cette information peut provenir du canal alpha.",
-      "opaque": "Le fichier ne présente pas de transparence visible.",
-      "solid_color": "Fond opaque d’une seule couleur ou approximativement uni.",
-      "complex": "Fond opaque avec des motifs, objets ou décor distincts.",
-      "unknown": "Information incertaine, masquée ou impossible à déterminer à partir de cette image."
-    },
-    "render_family": {
-      "pixel_art": "Rendu volontairement construit à partir de pixels visibles et de contours discrets.",
-      "raster_illustration": "Illustration matricielle dont le rendu ne présente pas clairement les caractéristiques du pixel art.",
-      "unknown": "Information incertaine, masquée ou impossible à déterminer à partir de cette image."
-    },
-    "body_plan": {
-      "legged": "Figure présentant des membres porteurs ou des jambes visibles.",
-      "biped": "Deux membres porteurs visibles ; une posture humaine ne suffit pas si les jambes sont masquées.",
-      "quadruped": "Quatre membres porteurs visibles.",
-      "multiped": "Plus de quatre membres porteurs visibles.",
-      "legged_unspecified": "Des jambes ou membres porteurs sont visibles mais leur nombre reste incertain.",
-      "legless": "Figure dont la structure visible ne comporte pas de jambes identifiables.",
-      "serpentine_body": "Corps allongé et souple sans jambes visibles, évoquant un serpent.",
-      "fish_like_body": "Corps sans jambes visibles évoquant un poisson, éventuellement avec nageoires.",
-      "amorphous_body": "Corps sans jambes visibles et sans structure rigide identifiable.",
-      "legless_unspecified": "Corps sans jambes visibles dont la structure précise est incertaine.",
-      "unknown": "Information incertaine, masquée ou impossible à déterminer à partir de cette image.",
-      "not_applicable": "Cette dimension ne s’applique pas au sujet ou au contenu de cette image."
-    },
-    "wings": {
-      "wings_present": "Une ou plusieurs ailes sont clairement visibles.",
-      "wings_not_visible": "Aucune aile n’est visible alors que le cadrage et la résolution permettent de l’évaluer ; ne prouve pas que le sujet n’en possède pas.",
-      "unknown": "Information incertaine, masquée ou impossible à déterminer à partir de cette image.",
-      "not_applicable": "Cette dimension ne s’applique pas au sujet ou au contenu de cette image."
-    },
-    "background_scene": {
-      "natural": "Décor principalement composé d’éléments naturels.",
-      "forest": "Décor avec arbres ou végétation arborée formant une forêt.",
-      "grassland": "Plaine, prairie ou champ principalement couvert d’herbe.",
-      "desert": "Décor aride, sableux ou désertique clairement identifiable.",
-      "mountain": "Paysage dominé par des montagnes ou reliefs rocheux élevés.",
-      "cave": "Intérieur souterrain naturel ou grotte reconnaissable.",
-      "coast": "Rivage, plage ou bord de mer identifiable.",
-      "underwater": "Scène représentée sous l’eau.",
-      "snow_or_ice": "Paysage dominé par la neige ou la glace.",
-      "swamp": "Marécage ou zone humide reconnaissable.",
-      "volcanic": "Décor volcanique avec lave ou signes géologiques visibles.",
-      "sky_or_space": "Ciel ouvert ou espace cosmique comme décor principal.",
-      "natural_unspecified": "Décor naturel reconnaissable mais plus précis impossible.",
-      "built": "Décor principalement constitué de constructions.",
-      "city_or_village": "Rue, bâtiments ou ensemble urbain ou villageois.",
-      "castle_or_palace": "Château, palais ou architecture clairement associée.",
-      "dungeon": "Intérieur construit souterrain de type donjon, cellule ou fortification.",
-      "house_interior": "Pièce ou intérieur domestique identifiable.",
-      "industrial": "Usine, atelier industriel ou structures mécaniques industrielles.",
-      "temple": "Temple ou édifice religieux identifiable visuellement.",
-      "spaceship": "Intérieur ou structure évoquant clairement un vaisseau spatial.",
-      "built_unspecified": "Décor construit reconnaissable mais plus précis impossible.",
-      "abstract": "Fond complexe non figuratif, motif ou composition abstraite.",
-      "mixed_scene": "Plusieurs décors distincts sont visibles sans type dominant unique.",
-      "unknown": "Fond complexe mais décor incertain ou impossible à identifier.",
-      "not_applicable": "Fond transparent ou uni : aucun décor complexe à qualifier."
-    },
-    "visual_quality": {
-      "acceptable": "Image exploitable visuellement sans défaut majeur manifeste.",
-      "clean": "Image visiblement nette et complète, sans artefact de compression, découpe accidentelle ou fond parasite évident ; des contours pixelisés voulus sont normaux.",
-      "minor_issues": "Image globalement exploitable mais présentant de petits défauts visibles, tels que quelques pixels parasites ou une légère découpe non essentielle.",
-      "needs_rework": "Défaut manifeste nécessitant une retouche avant usage : sujet fortement coupé, image corrompue ou illisible, artefacts sévères, fond parasite gênant ou plusieurs éléments non séparés quand un sprite unique est attendu. Une planche explicitement identifiée comme telle ne doit pas être pénalisée pour contenir plusieurs sprites.",
-      "unknown": "La qualité ne peut pas être jugée avec confiance, par exemple parce que l’image est trop petite ou ambiguë."
-    }
+  "compatibility": {
+    "compatible_sha256": [
+      "0d7a028d4008dd6da3d9e7b9f66f821f8dd339aa393cddac76aed4a21e7b5bba"
+    ],
+    "semantic_sha256": "c1f4517af560fb1a2dc8b06bf1e1ae6c59e45c66911000478f19a2561b702c5e",
+    "note": "La version 3.3.1 déplace les descriptions dans chaque nœud sans changer les dimensions ni les valeurs de 3.3.0."
   }
 }

@@ -54,4 +54,4 @@ Le notebook [`data_structure.ipynb`](dataset/data_structure.ipynb) présente un 
 
 La taxonomie distingue la forme du sujet (`subject_type`), sa structure corporelle (`body_plan`) et les ailes visibles (`wings`), afin de combiner par exemple humanoïde et bipède. Les annotations des anciennes versions restent dans leurs fichiers de travail.
 
-Les définitions de chaque branche et valeur sont dans `value_descriptions` du JSON ; elles sont affichées dans le notebook des arbres et transmises au modèle d’annotation.
+Les définitions de chaque branche et valeur sont directement dans les nœuds du JSON ; elles sont affichées dans le notebook des arbres et transmises au modèle d’annotation.
