@@ -1,5 +1,5 @@
 {
-  "version": "3.1.0",
+  "version": "3.2.0",
   "description": "Dimensions visuelles indépendantes, chacune organisée en arbre. Les étiquettes sont les feuilles ; les branches servent à regrouper les valeurs. Plusieurs dimensions peuvent décrire le même sujet.",
   "hierarchies": {
     "asset_type": {
@@ -146,6 +146,36 @@
       "wings_not_visible": {},
       "unknown": {},
       "not_applicable": {}
+    },
+    "background_scene": {
+      "natural": {
+        "forest": {},
+        "grassland": {},
+        "desert": {},
+        "mountain": {},
+        "cave": {},
+        "coast": {},
+        "underwater": {},
+        "snow_or_ice": {},
+        "swamp": {},
+        "volcanic": {},
+        "sky_or_space": {},
+        "natural_unspecified": {}
+      },
+      "built": {
+        "city_or_village": {},
+        "castle_or_palace": {},
+        "dungeon": {},
+        "house_interior": {},
+        "industrial": {},
+        "temple": {},
+        "spaceship": {},
+        "built_unspecified": {}
+      },
+      "abstract": {},
+      "mixed_scene": {},
+      "unknown": {},
+      "not_applicable": {}
     }
   },
   "dimensions": {
@@ -193,6 +223,11 @@
       "label": "Ailes visibles",
       "definition": "Présence visuelle d’ailes ; wings_not_visible signifie uniquement qu’aucune aile n’est visible sur cette image.",
       "applicability": "Pour une figure dont le corps est identifiable ; unknown si le cadrage ou la résolution ne permet pas de conclure ; not_applicable pour un objet, décor ou effet."
+    },
+    "background_scene": {
+      "label": "Décor du fond complexe",
+      "definition": "Type de décor identifiable à l’arrière-plan : milieu naturel, construction ou fond abstrait.",
+      "applicability": "Uniquement quand background_type vaut complex ; not_applicable pour un fond transparent ou uni. Pour un fond complexe non reconnaissable, choisir unknown. Ne pas supposer une forêt à partir d’une couleur verte."
     }
   },
   "value_descriptions": {
@@ -318,6 +353,34 @@
       "wings_not_visible": "Aucune aile n’est visible alors que le cadrage et la résolution permettent de l’évaluer ; ne prouve pas que le sujet n’en possède pas.",
       "unknown": "Information incertaine, masquée ou impossible à déterminer à partir de cette image.",
       "not_applicable": "Cette dimension ne s’applique pas au sujet ou au contenu de cette image."
+    },
+    "background_scene": {
+      "natural": "Décor principalement composé d’éléments naturels.",
+      "forest": "Décor avec arbres ou végétation arborée formant une forêt.",
+      "grassland": "Plaine, prairie ou champ principalement couvert d’herbe.",
+      "desert": "Décor aride, sableux ou désertique clairement identifiable.",
+      "mountain": "Paysage dominé par des montagnes ou reliefs rocheux élevés.",
+      "cave": "Intérieur souterrain naturel ou grotte reconnaissable.",
+      "coast": "Rivage, plage ou bord de mer identifiable.",
+      "underwater": "Scène représentée sous l’eau.",
+      "snow_or_ice": "Paysage dominé par la neige ou la glace.",
+      "swamp": "Marécage ou zone humide reconnaissable.",
+      "volcanic": "Décor volcanique avec lave ou signes géologiques visibles.",
+      "sky_or_space": "Ciel ouvert ou espace cosmique comme décor principal.",
+      "natural_unspecified": "Décor naturel reconnaissable mais plus précis impossible.",
+      "built": "Décor principalement constitué de constructions.",
+      "city_or_village": "Rue, bâtiments ou ensemble urbain ou villageois.",
+      "castle_or_palace": "Château, palais ou architecture clairement associée.",
+      "dungeon": "Intérieur construit souterrain de type donjon, cellule ou fortification.",
+      "house_interior": "Pièce ou intérieur domestique identifiable.",
+      "industrial": "Usine, atelier industriel ou structures mécaniques industrielles.",
+      "temple": "Temple ou édifice religieux identifiable visuellement.",
+      "spaceship": "Intérieur ou structure évoquant clairement un vaisseau spatial.",
+      "built_unspecified": "Décor construit reconnaissable mais plus précis impossible.",
+      "abstract": "Fond complexe non figuratif, motif ou composition abstraite.",
+      "mixed_scene": "Plusieurs décors distincts sont visibles sans type dominant unique.",
+      "unknown": "Fond complexe mais décor incertain ou impossible à identifier.",
+      "not_applicable": "Fond transparent ou uni : aucun décor complexe à qualifier."
     }
   }
 }

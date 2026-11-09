@@ -48,7 +48,7 @@ Les images préparées sont placées sur un canevas blanc de 96 × 96 sans agran
 
 ## Annotation des taxonomies
 
-Le notebook [`taxonomie_dataset.ipynb`](dataset/taxonomie_dataset.ipynb) annote les images du dataset local avec Qwen3.6-35B-A3B quantifié via Strata distant selon les hiérarchies de [`taxonomies.json`](dataset/taxonomies.json). Chaque annotation contient les étiquettes et leurs chemins complets. Commence avec le petit lot configuré par défaut, vérifie les propositions, puis mets `MAX_IMAGES = None` pour traiter toutes les images. La progression est conservée dans `dataset/taxonomy_work/` et la dernière cellule publie le lot dans un nouveau dossier du dataset Hugging Face. Les résultats restent à vérifier et ne remplacent pas les annotations existantes.
+Le notebook [`taxonomie_dataset.ipynb`](dataset/taxonomie_dataset.ipynb) annote les images du dataset local avec Qwen3.8-Flash-Next Gyro-S quantifié via Strata distant selon les hiérarchies de [`taxonomies.json`](dataset/taxonomies.json). Chaque annotation contient les étiquettes et leurs chemins complets. Commence avec le petit lot configuré par défaut, vérifie les propositions, puis mets `MAX_IMAGES = None` pour traiter toutes les images. La progression est conservée dans `dataset/taxonomy_work/` et la dernière cellule publie le lot dans un nouveau dossier du dataset Hugging Face. Les résultats restent à vérifier et ne remplacent pas les annotations existantes.
 
 Le notebook [`arbre_taxonomie.ipynb`](dataset/arbre_taxonomie.ipynb) affiche les arbres et explique leurs dimensions. Chaque arbre est indépendant : une vue et une pose peuvent être combinées sans former une seule catégorie.
 
