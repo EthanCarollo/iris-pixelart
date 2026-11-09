@@ -1,0 +1,250 @@
+{
+  "version": "1.0.0",
+  "description": "Taxonomie complémentaire des couleurs visibles et de la palette. Les familles dominantes peuvent être multi-étiquettes : sélectionner uniquement celles qui occupent une part visuellement notable. Décrire les pixels, sans inférer matière, identité, émotion, rareté ou intention artistique.",
+  "measurement_guidance": {
+    "transparency": "Ignorer les pixels dont alpha vaut 0 pour les mesures de palette. Ne pas assimiler la transparence à du blanc ou du noir.",
+    "dominance": "Une couleur est dominante si elle couvre une surface notable ou structure la lecture du sprite. Ne pas étiqueter chaque pixel isolé ou petit accent.",
+    "pixel_art": "Les contours nets, aplats et petits clusters sont des choix de rendu, pas des défauts de palette. Les couleurs identiques comptent une seule fois.",
+    "multi_image": "Pour une planche, décrire la palette de l’image entière seulement si elle est cohérente ; sinon utiliser mixed/unknown ou analyser chaque sprite séparément.",
+    "limits": "La famille de teinte est une description visuelle. Ne jamais déduire le matériau, la fonction, l’espèce, le teint, l’émotion ou le contexte narratif à partir d’une couleur seule.",
+    "palette_size_measure": "Comptage exact des couleurs RGB/RGBA opaques distinctes après exclusion de l’alpha nul. Cette valeur peut être calculée par code ; ne pas la deviner visuellement si le fichier source est disponible."
+  },
+  "hierarchies": {
+    "dominant_color_families": {
+      "chromatic": {
+        "description": "Couleurs avec une teinte perceptible. Les sous-catégories indiquent la famille de teinte visible, jamais la matière ou l’identité supposée de l’objet.",
+        "children": {
+          "red": {
+            "description": "Rouge franc à rouge sombre, y compris les pixels qui restent nettement rouges malgré une ombre ou une lumière.",
+            "children": {}
+          },
+          "orange": {
+            "description": "Orange, ambre ou ocre orangé clairement distinct du jaune et du rouge.",
+            "children": {}
+          },
+          "yellow": {
+            "description": "Jaune, doré ou crème jaune lorsque la teinte jaune est dominante.",
+            "children": {}
+          },
+          "green": {
+            "description": "Vert, du vert sombre au vert vif, sans le confondre avec cyan ou olive brunâtre.",
+            "children": {}
+          },
+          "cyan": {
+            "description": "Cyan ou turquoise, à mi-chemin visuel entre bleu et vert.",
+            "children": {}
+          },
+          "blue": {
+            "description": "Bleu, du bleu marine au bleu clair, lorsque la teinte bleue domine.",
+            "children": {}
+          },
+          "purple": {
+            "description": "Violet ou pourpre, entre bleu et magenta.",
+            "children": {}
+          },
+          "pink": {
+            "description": "Rose ou magenta clair, distinct d’un rouge franc.",
+            "children": {}
+          },
+          "brown": {
+            "description": "Brun ou ocre brun, couleur peu lumineuse et peu saturée entre rouge, orange et jaune. Ne pas déduire bois, peau ou matériau.",
+            "children": {}
+          },
+          "other_hue": {
+            "description": "Teinte chromatique visible qui ne rentre pas clairement dans les familles précédentes.",
+            "children": {}
+          }
+        }
+      },
+      "achromatic": {
+        "description": "Pixels sans teinte chromatique nette, principalement définis par leur luminosité.",
+        "children": {
+          "black": {
+            "description": "Noir ou presque noir, proche de l’extrémité la plus sombre.",
+            "children": {}
+          },
+          "dark_gray": {
+            "description": "Gris sombre, plus clair que le noir mais sans teinte visible.",
+            "children": {}
+          },
+          "gray": {
+            "description": "Gris moyen ou neutre, sans teinte chromatique dominante.",
+            "children": {}
+          },
+          "light_gray": {
+            "description": "Gris clair, plus sombre que le blanc et sans teinte nette.",
+            "children": {}
+          },
+          "white": {
+            "description": "Blanc ou presque blanc, sans teinte jaune ou colorée dominante.",
+            "children": {}
+          }
+        }
+      },
+      "unknown": {
+        "description": "Impossible de déterminer une famille de couleur avec confiance, par exemple image minuscule, masquée ou fortement transparente.",
+        "children": {}
+      },
+      "not_applicable": {
+        "description": "Aucune couleur exploitable à décrire dans le contenu visible.",
+        "children": {}
+      }
+    },
+    "palette_size": {
+      "very_limited": {
+        "description": "Palette très restreinte : 1 à 4 couleurs distinctes visibles. Compter les couleurs opaques de l’image, pas les pixels transparents.",
+        "children": {}
+      },
+      "limited": {
+        "description": "Palette restreinte : 5 à 8 couleurs distinctes visibles.",
+        "children": {}
+      },
+      "moderate": {
+        "description": "Palette moyenne : 9 à 16 couleurs distinctes visibles.",
+        "children": {}
+      },
+      "broad": {
+        "description": "Palette étendue : 17 à 32 couleurs distinctes visibles.",
+        "children": {}
+      },
+      "very_broad": {
+        "description": "Palette très étendue : plus de 32 couleurs distinctes visibles.",
+        "children": {}
+      },
+      "unknown": {
+        "description": "Le nombre de couleurs ne peut pas être estimé de façon fiable.",
+        "children": {}
+      },
+      "not_applicable": {
+        "description": "Aucun pixel visible à analyser.",
+        "children": {}
+      }
+    },
+    "palette_temperature": {
+      "warm_dominant": {
+        "description": "Les teintes chaudes (rouges, oranges, jaunes) dominent nettement la surface colorée.",
+        "children": {}
+      },
+      "cool_dominant": {
+        "description": "Les teintes froides (verts, cyans, bleus, violets) dominent nettement la surface colorée.",
+        "children": {}
+      },
+      "neutral_dominant": {
+        "description": "Les gris, noirs, blancs ou bruns peu saturés dominent ; aucune famille chaude ou froide ne s’impose.",
+        "children": {}
+      },
+      "balanced_warm_cool": {
+        "description": "Des teintes chaudes et froides sont toutes deux importantes, sans domination nette.",
+        "children": {}
+      },
+      "mixed_unclear": {
+        "description": "Plusieurs températures sont présentes mais leur équilibre ne peut pas être décrit clairement.",
+        "children": {}
+      },
+      "unknown": {
+        "description": "Température impossible à établir avec confiance.",
+        "children": {}
+      },
+      "not_applicable": {
+        "description": "Aucun pixel visible à analyser.",
+        "children": {}
+      }
+    },
+    "palette_structure": {
+      "monochromatic": {
+        "description": "Une seule famille de teinte forme l’essentiel de la palette, avec des variations de luminosité ou de saturation.",
+        "children": {}
+      },
+      "near_monochromatic": {
+        "description": "Une teinte domine fortement et quelques couleurs d’accent distinctes restent visibles.",
+        "children": {}
+      },
+      "analogous": {
+        "description": "La palette est surtout composée de teintes voisines sur le cercle chromatique, sans opposition forte.",
+        "children": {}
+      },
+      "complementary_contrast": {
+        "description": "Deux familles de teintes opposées créent un contraste coloré évident.",
+        "children": {}
+      },
+      "triadic_or_multi_hue": {
+        "description": "Au moins trois familles de teintes distinctes sont réparties de façon visuellement notable.",
+        "children": {}
+      },
+      "neutral_with_accent": {
+        "description": "La palette est surtout neutre ou achromatique avec une ou quelques couleurs d’accent.",
+        "children": {}
+      },
+      "varied_no_clear_scheme": {
+        "description": "Plusieurs couleurs sont présentes sans structure harmonique dominante clairement lisible.",
+        "children": {}
+      },
+      "unknown": {
+        "description": "La structure de palette est trop ambiguë pour être déterminée.",
+        "children": {}
+      },
+      "not_applicable": {
+        "description": "Aucun pixel visible à analyser.",
+        "children": {}
+      }
+    },
+    "palette_contrast": {
+      "low": {
+        "description": "Les couleurs visibles ont des luminosités proches et créent peu de séparation tonale.",
+        "children": {}
+      },
+      "moderate": {
+        "description": "La palette présente des différences de luminosité perceptibles sans opposition extrême.",
+        "children": {}
+      },
+      "high": {
+        "description": "Des zones claires et sombres ou des couleurs fortement opposées créent une séparation marquée.",
+        "children": {}
+      },
+      "mixed": {
+        "description": "Le contraste varie fortement selon les parties de l’image.",
+        "children": {}
+      },
+      "unknown": {
+        "description": "Contraste impossible à estimer avec confiance.",
+        "children": {}
+      },
+      "not_applicable": {
+        "description": "Aucun pixel visible à analyser.",
+        "children": {}
+      }
+    }
+  },
+  "dimensions": {
+    "dominant_color_families": {
+      "label": "Familles de couleurs dominantes",
+      "definition": "Ensemble multi-étiquette des familles chromatiques ou achromatiques qui occupent une place notable dans l’image.",
+      "cardinality": "multi_label",
+      "applicability": "Pour toute image contenant des pixels visibles ; sélectionner zéro ou plusieurs familles. unknown si l’analyse est incertaine, not_applicable si aucun pixel n’est visible. Éviter les couleurs secondaires anecdotiques."
+    },
+    "palette_size": {
+      "label": "Taille de la palette",
+      "definition": "Nombre de couleurs opaques distinctes présentes dans les pixels visibles, regroupé en classes.",
+      "cardinality": "single_label",
+      "applicability": "Pour toute image ; idéalement calculée depuis le fichier source en ignorant les pixels alpha=0. La taille native, la résolution et le nombre de sprites ne sont pas des défauts."
+    },
+    "palette_temperature": {
+      "label": "Température de la palette",
+      "definition": "Équilibre global entre familles de teintes chaudes, froides et neutres, pondéré par leur présence visuelle.",
+      "cardinality": "single_label",
+      "applicability": "Pour une image avec couleurs visibles ; juger la dominance globale, pas quelques pixels isolés."
+    },
+    "palette_structure": {
+      "label": "Organisation des teintes",
+      "definition": "Relation perceptible entre les familles de teintes de la palette.",
+      "cardinality": "single_label",
+      "applicability": "Décrire une relation clairement visible seulement. Ne pas attribuer une harmonie intentionnelle ou un effet émotionnel."
+    },
+    "palette_contrast": {
+      "label": "Contraste de la palette",
+      "definition": "Niveau de séparation tonale et colorée entre les grandes zones visibles.",
+      "cardinality": "single_label",
+      "applicability": "Pour les images avec plusieurs zones visibles ; évaluer l’image à sa taille native et ne pas confondre contour pixelisé et défaut."
+    }
+  }
+}
