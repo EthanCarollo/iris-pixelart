@@ -1,0 +1,18 @@
+name: iris-lora
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pip
+  - pip:
+      - --extra-index-url https://download.pytorch.org/whl/cu130
+      - torch==2.13.0
+      - jupyterlab==4.6.6
+      - ipykernel==7.4.0
+      - huggingface_hub==1.23.0
+      - Pillow==12.3.0
+      - matplotlib==3.10.1
+      - pandas
+      - numpy==1.26.4
+      - PyYAML==6.0.3
+      - python-dotenv
