@@ -22,5 +22,6 @@ def visual_hierarchy(view, pose):
     return {'level_1': 'sprite', 'level_2': view, 'level_3': pose, 'path': path}
 
 
-def prefix(hierarchy):
-    return ', '.join(hierarchy['path'] + ['pixel art', '96x96'])
+def prefix(hierarchy, canvas_size=(96, 96)):
+    width, height = canvas_size
+    return ', '.join(hierarchy['path'] + ['pixel art', f'{width}x{height}'])

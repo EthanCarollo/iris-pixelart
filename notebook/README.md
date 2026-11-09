@@ -15,7 +15,7 @@ Le fichier `.env` local est ignoré par Git. Le pilote ne marque pas encore ses 
 
 ## Inférence
 
-Ouvrir [`inference_iris3b_sprite_lora.ipynb`](inference/inference_iris3b_sprite_lora.ipynb) dans le même environnement GPU, avec `iris_sprite_lora_work/` et le checkpoint LoRA disponibles. Le notebook charge en priorité le run hiérarchique `iris_pixelart_sprite_96_humanoid`, démarre le moteur au premier essai et affiche l'avancement. Les images générées sont enregistrées dans `training/iris_sprite_lora_work/inference_iris3b_sprite_lora/generated/`. Il active les poids FP8 et l'offload complet des couches du transformer et de l'encodeur texte vers la RAM système. Cela réduit l'usage de VRAM, au prix d'une génération plus lente et d'une forte consommation de RAM. Après nettoyage, relancer la cellule de génération redémarre le moteur automatiquement.
+Ouvrir [`inference_iris3b_sprite_lora.ipynb`](inference/inference_iris3b_sprite_lora.ipynb) dans le même environnement GPU, avec `iris_sprite_lora_work/` et le checkpoint LoRA disponibles. Le notebook charge en priorité le run à tailles natives le plus récent, puis les anciens runs 96 × 96, démarre le moteur au premier essai et affiche l'avancement. Les images générées sont enregistrées dans `training/iris_sprite_lora_work/inference_iris3b_sprite_lora/generated/`. Il active les poids FP8 et l'offload complet des couches du transformer et de l'encodeur texte vers la RAM système. Cela réduit l'usage de VRAM, au prix d'une génération plus lente et d'une forte consommation de RAM. Après nettoyage, relancer la cellule de génération redémarre le moteur automatiquement.
 
 ## Lancer avec Conda
 
@@ -44,7 +44,7 @@ Garde cette fenêtre ouverte, puis ouvre `http://localhost:8888` dans ton naviga
 
 Ouvrir `dataset/analysis/analyse_dataset.ipynb`. La hiérarchie préparée utilise `sprite → vue → pose` ; les rôles de jeu sont retirés des tags et des captions. Les descriptions automatiques peuvent encore comporter des erreurs et nécessitent une vérification visuelle. Le JSONL original est conservé sous `qwen3vl_sprite_training_original.jsonl`. `sprite_taxonomy.py` doit rester à côté du notebook d’entraînement. Les checkpoints existants ne sont pas réentraînés automatiquement.
 
-Les images préparées sont placées sur un canevas blanc de 96 × 96 sans agrandissement : les sources qui tiennent dans le canevas conservent leurs pixels 1:1. Les sources dépassant 96 pixels sont réduites en plus proche voisin pour cette configuration ; elles perdent donc des détails. La mention `96x96` dans le prompt désigne le canevas, pas la résolution native du sprite. Les anciens checkpoints ont été entraînés sur la préparation précédente.
+Le notebook d’entraînement préserve les pixels et la taille native de chaque source : il ajoute un fond blanc jusqu’au prochain multiple de 16 pour chaque dimension (par exemple, 36 × 36 devient un canevas de 48 × 48). Chaque préparation utilise un nouveau dossier et un nouveau run ; les anciens fichiers et checkpoints 96 × 96 restent disponibles. Vérifie les tailles et la VRAM avant d’activer l’entraînement.
 
 ## Annotation des taxonomies
 
