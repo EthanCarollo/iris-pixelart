@@ -8,15 +8,18 @@ const statusPath = resolve(datasetRoot, '.viewer-download-status.json')
 const indexPath = resolve(datasetRoot, 'viewer-index.json')
 
 export default defineEventHandler(async (event) => {
+  const syncRequested = getQuery(event).sync === '1'
   const authorization = getHeader(event, 'authorization')
   const token = authorization?.startsWith('Bearer ') ? authorization.slice(7).trim() : ''
   if (!token) throw createError({ statusCode: 401, statusMessage: 'Saisis un jeton Hugging Face.' })
 
-  try {
-    await access(indexPath)
-    return { status: 'complete', message: 'Le dataset est déjà téléchargé.' }
-  } catch {
-    // Start a local download below.
+  if (!syncRequested) {
+    try {
+      await access(indexPath)
+      return { status: 'complete', message: 'Le dataset est déjà téléchargé.' }
+    } catch {
+      // Start a local download below.
+    }
   }
 
   try {

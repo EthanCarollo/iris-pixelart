@@ -18,6 +18,13 @@ type DatasetResponse = {
   message?: string
   errors?: number
 }
+type TagStats = {
+  total: number
+  captionGroups: Array<{ title: string; items: Array<{ key: string; label: string; count: number }>; denominator: number; multiple?: boolean }>
+  annotationTotal: number
+  annotationCoveragePercent: number
+  annotationGroups: Array<{ title: string; items: Array<{ key: string; label: string; count: number }>; denominator: number; multiple?: boolean }>
+}
 
 const datasetId = 'ethanzxv/pixelart-dataset'
 const pageSize = 100
@@ -25,7 +32,9 @@ const tokenInput = ref('')
 const search = ref('')
 const currentPage = ref(0)
 const dataset = shallowRef<DatasetView | null>(null)
+const tagStats = shallowRef<TagStats | null>(null)
 const localReady = ref(false)
+const syncPrompt = ref(false)
 const loading = ref(false)
 const downloadActive = ref(false)
 const downloadDone = ref(0)
@@ -63,6 +72,7 @@ onMounted(async () => {
   try {
     await loadDownloadedDataset(0)
     localReady.value = true
+    await loadTagStats()
     setStatus('Copie locale chargée. Les images sont servies depuis ce dossier.')
   } catch {
     localReady.value = false
@@ -109,7 +119,20 @@ async function loadDownloadedDataset(page: number) {
   }
 }
 
-async function startDownload() {
+async function loadTagStats() {
+  try {
+    tagStats.value = await $fetch<TagStats>('/api/local-dataset/stats')
+  } catch {
+    tagStats.value = null
+  }
+}
+
+function tagPercent(count: number, denominator: number) {
+  if (!denominator) return '0,0'
+  return (count / denominator * 100).toLocaleString('fr-FR', { maximumFractionDigits: 1 })
+}
+
+async function startDownload(sync = false) {
   const token = tokenInput.value.trim()
   if (!token) {
     setStatus('Saisis un jeton Hugging Face avec accès en lecture au dépôt.', true)
@@ -124,6 +147,7 @@ async function startDownload() {
   try {
     const response = await $fetch<DatasetResponse>('/api/dataset-download', {
       method: 'POST',
+      query: sync ? { sync: '1' } : undefined,
       headers: { Authorization: `Bearer ${token}` }
     })
     tokenInput.value = ''
@@ -188,9 +212,11 @@ function applyDownloadStatus(response: DatasetResponse) {
 async function finishDownload() {
   downloadActive.value = false
   localReady.value = true
+  syncPrompt.value = false
   search.value = ''
   currentPage.value = 0
   await loadDownloadedDataset(0)
+  await loadTagStats()
   setStatus('Dataset téléchargé et chargé depuis le disque local.')
 }
 
@@ -329,14 +355,14 @@ onUnmounted(() => {
     <section class="hf-card" aria-labelledby="hfHeading">
       <div class="hf-card-head">
         <div><h2 id="hfHeading">{{ localReady ? 'Dataset téléchargé' : 'Télécharger le dataset privé' }}</h2><p>{{ localReady ? 'La copie locale est chargée par défaut.' : 'Un jeton Hugging Face est nécessaire pour récupérer le dépôt complet.' }}</p></div>
-        <span class="hf-brand">🤗 HF</span>
+        <div class="hf-head-actions"><button v-if="localReady && !syncPrompt" class="button secondary" type="button" :disabled="downloadActive" @click="syncPrompt = true">Resynchroniser Hugging Face</button><span class="hf-brand">🤗 HF</span></div>
       </div>
-      <form v-if="!localReady" class="hf-controls download-controls" @submit.prevent="startDownload">
+      <form v-if="!localReady || syncPrompt" class="hf-controls download-controls" @submit.prevent="startDownload(syncPrompt)">
         <div class="field token-field">
-          <label for="hfToken">Jeton Hugging Face avec accès au dépôt</label>
+          <label for="hfToken">{{ syncPrompt ? 'Jeton HF pour resynchroniser le dépôt' : 'Jeton Hugging Face avec accès au dépôt' }}</label>
           <input id="hfToken" v-model="tokenInput" type="password" autocomplete="off" placeholder="Colle ton jeton ici" :disabled="downloadActive">
         </div>
-        <button class="button" type="submit" :disabled="downloadActive">{{ downloadActive ? 'Téléchargement…' : 'Télécharger localement' }}</button>
+        <div class="download-actions"><button class="button" type="submit" :disabled="downloadActive">{{ downloadActive ? 'Synchronisation…' : syncPrompt ? 'Resynchroniser' : 'Télécharger localement' }}</button><button v-if="syncPrompt" class="button secondary" type="button" :disabled="downloadActive" @click="syncPrompt = false">Annuler</button></div>
       </form>
       <div class="dataset-name">{{ datasetId }}</div>
       <div v-if="status" class="hf-status" :class="{ error: statusError }" role="status">{{ status }}</div>
@@ -372,6 +398,38 @@ onUnmounted(() => {
         <div class="stat"><span>Colonnes</span><strong>{{ dataset.columns.length.toLocaleString('fr-FR') }}</strong></div>
         <div class="stat"><span>Résultats</span><strong>{{ totalRows.toLocaleString('fr-FR') }}</strong></div>
       </div>
+      <section v-if="dataset.source === 'paged' && tagStats" class="tag-overview" aria-labelledby="tagOverviewTitle">
+        <div class="tag-overview-head">
+          <div><h2 id="tagOverviewTitle">Répartition globale du dataset</h2><p>{{ tagStats.total.toLocaleString('fr-FR') }} images au total · indépendante de la recherche et de la pagination</p></div>
+          <span class="tag-total">{{ tagStats.total.toLocaleString('fr-FR') }} images</span>
+        </div>
+        <p class="tag-note">Le dépôt contient {{ tagStats.annotationTotal.toLocaleString('fr-FR') }} annotations structurées disponibles ({{ tagStats.annotationCoveragePercent.toLocaleString('fr-FR', { maximumFractionDigits: 1 }) }} % du dataset) ; les graphiques détaillés ci-dessous portent sur ces images annotées. Le rôle de jeu est exclu des statistiques. Le reste du dataset est résumé d’après les caractéristiques explicitement mentionnées dans les légendes, sans déduire de tags absents.</p>
+        <h3 class="tag-section-title">Tags structurés des images annotées</h3>
+        <div class="tag-grid">
+          <article v-for="group in tagStats.annotationGroups" :key="`annotation-${group.title}`" class="tag-card">
+            <h3>{{ group.title }}</h3>
+            <ul class="tag-list">
+              <li v-for="item in group.items" :key="item.key" class="tag-row">
+                <div class="tag-row-label"><span>{{ item.label }}</span><strong>{{ item.count.toLocaleString('fr-FR') }} · {{ tagPercent(item.count, group.denominator) }} %</strong></div>
+                <div class="tag-track"><span :style="{ width: `${Math.max(item.count ? 0.5 : 0, item.count / group.denominator * 100)}%` }"></span></div>
+              </li>
+            </ul>
+          </article>
+        </div>
+        <p class="tag-note tag-note-bottom">Pour les couleurs et équipements, une image peut porter plusieurs tags : la somme de ces pourcentages peut dépasser 100 %. Le terme source « character » est affiché comme « humanoid » pour la forme du sujet.</p>
+        <h3 class="tag-section-title">Caractéristiques explicites sur toutes les images</h3>
+        <div class="tag-grid">
+          <article v-for="group in tagStats.captionGroups" :key="`caption-${group.title}`" class="tag-card">
+            <h3>{{ group.title }}</h3>
+            <ul class="tag-list">
+              <li v-for="item in group.items" :key="item.key" class="tag-row">
+                <div class="tag-row-label"><span>{{ item.label }}</span><strong>{{ item.count.toLocaleString('fr-FR') }} · {{ tagPercent(item.count, group.denominator) }} %</strong></div>
+                <div class="tag-track"><span :style="{ width: `${Math.max(item.count ? 0.5 : 0, item.count / group.denominator * 100)}%` }"></span></div>
+              </li>
+            </ul>
+          </article>
+        </div>
+      </section>
       <div class="table-card">
         <div class="table-toolbar">
           <label class="search-wrap"><input v-model="search" class="search" type="search" placeholder="Rechercher dans les légendes et noms…" autocomplete="off"></label>

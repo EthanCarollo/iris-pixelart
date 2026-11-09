@@ -55,6 +55,8 @@ def run(command: list[str], *, environment: dict[str, str]) -> None:
         detail = (result.stderr or result.stdout or "").strip()
         if "401" in detail or "403" in detail or "Unauthorized" in detail:
             raise RuntimeError("Accès refusé par Hugging Face. Vérifie le jeton et son accès au dépôt.")
+        if "Signature=" in detail or "X-Amz-" in detail or "cdn-lfs" in detail:
+            raise RuntimeError("Hugging Face a refusé le téléchargement de certains fichiers Git LFS. Vérifie l’accès au dépôt.")
         raise RuntimeError(detail[-2000:] or f"{command[0]} failed with exit code {result.returncode}")
 
 
@@ -75,21 +77,15 @@ def lfs_counts(environment: dict[str, str]) -> tuple[int, int]:
 
 def pull_lfs(environment: dict[str, str]) -> None:
     downloaded, total = lfs_counts(environment)
+    if total and downloaded == total:
+        write_status(status="downloading", done=total, total=total, message="Images Git LFS déjà à jour")
+        return
     write_status(status="downloading", done=downloaded, total=total, message="Téléchargement des images Git LFS")
-    process = subprocess.Popen(
-        ["git", "-C", str(REPO_DIR), "lfs", "pull"],
-        cwd=ROOT,
-        env=environment,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
-    while process.poll() is None:
-        time.sleep(10)
-        downloaded, total = lfs_counts(environment)
-        write_status(status="downloading", done=downloaded, total=total, message="Téléchargement des images Git LFS")
-    if process.returncode:
-        raise RuntimeError(f"git lfs pull failed with exit code {process.returncode}")
+    run(["git", "-C", str(REPO_DIR), "lfs", "fetch", "origin", "main"], environment=environment)
+    run(["git", "-C", str(REPO_DIR), "lfs", "checkout"], environment=environment)
     downloaded, total = lfs_counts(environment)
+    if downloaded != total:
+        raise RuntimeError(f"Git LFS reported {downloaded} downloaded assets out of {total}.")
     write_status(status="downloading", done=downloaded, total=total, message="Images téléchargées, indexation en cours")
 
 
@@ -130,6 +126,10 @@ def main() -> int:
         if not (REPO_DIR / ".git").exists():
             write_status(status="cloning", done=0, total=0, message="Clonage des fichiers du dépôt Hugging Face")
             run(["git", "clone", "--depth", "1", REPO_URL, str(REPO_DIR)], environment=git_environment(skip_smudge=True))
+        else:
+            write_status(status="listing", done=0, total=0, message="Vérification des changements Hugging Face")
+            run(["git", "-C", str(REPO_DIR), "fetch", "--no-tags", "origin", "main"], environment=git_environment(skip_smudge=True))
+            run(["git", "-C", str(REPO_DIR), "merge", "--ff-only", "FETCH_HEAD"], environment=git_environment(skip_smudge=True))
 
         environment = git_environment(skip_smudge=False)
         run(["git", "-C", str(REPO_DIR), "config", "lfs.concurrenttransfers", "24"], environment=environment)

@@ -22,6 +22,7 @@ h1 { margin: 0; font-size: clamp(32px, 5vw, 46px); letter-spacing: -.045em; line
 .privacy::before { content: ""; display: inline-block; width: 7px; height: 7px; margin-right: 8px; border-radius: 50%; background: #66a06e; vertical-align: 1px; }
 .hf-card { margin: 0 0 18px; overflow: hidden; border: 1px solid var(--line); border-radius: 14px; background: var(--paper); }
 .hf-card-head { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 17px 20px; border-bottom: 1px solid var(--line); }
+.hf-head-actions, .download-actions { display: flex; align-items: center; gap: 9px; }
 .hf-card-head h2 { margin: 0; font-size: 14px; }
 .hf-card-head p { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
 .hf-brand { color: #9b692a; font-size: 12px; font-weight: 800; }
@@ -63,6 +64,23 @@ h1 { margin: 0; font-size: clamp(32px, 5vw, 46px); letter-spacing: -.045em; line
 .stat { padding: 15px 17px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); }
 .stat span { display: block; color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 .stat strong { display: block; margin-top: 6px; font-size: 22px; letter-spacing: -.03em; }
+.tag-overview { margin-bottom: 16px; padding: 19px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); }
+.tag-overview-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.tag-overview-head h2 { margin: 0; font-size: 17px; }
+.tag-overview-head p { margin: 5px 0 0; color: var(--muted); font-size: 12px; }
+.tag-total { flex: 0 0 auto; padding: 7px 10px; border-radius: 999px; color: #3e5941; background: var(--accent-soft); font-size: 11px; font-weight: 700; }
+.tag-note { max-width: 900px; margin: 12px 0 16px; color: var(--muted); font-size: 11px; line-height: 1.55; }
+.tag-note-bottom { margin-top: 12px; }
+.tag-section-title { margin: 18px 0 10px; font-size: 13px; }
+.tag-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.tag-card { min-width: 0; padding: 14px; border: 1px solid #eceee8; border-radius: 9px; background: #fdfdfb; }
+.tag-card h3 { margin: 0 0 12px; font-size: 13px; }
+.tag-list { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.tag-row-label { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; color: #596056; font-size: 11px; }
+.tag-row-label span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tag-row-label strong { flex: 0 0 auto; color: var(--ink); font-size: 10px; font-variant-numeric: tabular-nums; }
+.tag-track { height: 6px; margin-top: 5px; overflow: hidden; border-radius: 999px; background: #e9eee8; }
+.tag-track span { display: block; height: 100%; border-radius: inherit; background: var(--accent); }
 .table-card { overflow: hidden; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); }
 .table-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 13px 15px; border-bottom: 1px solid var(--line); }
 .search-wrap { position: relative; width: min(360px, 100%); }
@@ -94,9 +112,13 @@ footer { margin-top: 20px; color: #92968e; font-size: 11px; text-align: center; 
   .dropzone { align-items: flex-start; flex-direction: column; }
   .dataset-head { align-items: flex-start; flex-direction: column; }
   .stats { gap: 8px; }
+  .tag-grid { grid-template-columns: 1fr; }
+  .tag-overview { padding: 14px; }
+  .tag-overview-head { display: block; }
+  .tag-total { display: inline-block; margin-top: 10px; }
   .stat { padding: 12px; }
   .stat strong { font-size: 18px; }
   .table-toolbar { align-items: flex-start; flex-direction: column; }
   .search-wrap { width: 100%; }
 }
-@media (max-width: 500px) { .hf-controls { grid-template-columns: 1fr; } .hf-card-head { align-items: flex-start; } }
+@media (max-width: 500px) { .hf-controls { grid-template-columns: 1fr; } .hf-card-head { align-items: flex-start; } .hf-head-actions { align-items: flex-end; flex-direction: column-reverse; } .download-actions { flex-wrap: wrap; } }
