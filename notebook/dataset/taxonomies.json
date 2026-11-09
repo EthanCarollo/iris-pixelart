@@ -1,0 +1,73 @@
+{
+  "version": "1.0.0",
+  "description": "Taxonomie visuelle : choisir une valeur par champ ; unknown si incertain, not_applicable si le champ ne concerne pas l'image.",
+  "fields": {
+    "asset_type": [
+      "single_sprite",
+      "sprite_sheet",
+      "animation_strip",
+      "tile_set",
+      "background",
+      "unknown"
+    ],
+    "subject_type": [
+      "character",
+      "creature",
+      "object",
+      "environment",
+      "typography",
+      "interface",
+      "effect",
+      "projectile",
+      "weapon",
+      "unknown"
+    ],
+    "view": [
+      "front",
+      "side",
+      "back",
+      "three_quarter",
+      "top_down",
+      "mixed",
+      "unknown",
+      "not_applicable"
+    ],
+    "pose": [
+      "standing",
+      "airborne",
+      "flying",
+      "lying",
+      "prone",
+      "crouching",
+      "kneeling",
+      "sitting",
+      "unknown",
+      "not_applicable"
+    ],
+    "action": [
+      "idle",
+      "walk",
+      "run",
+      "attack_melee",
+      "attack_ranged",
+      "jump",
+      "fall",
+      "fly",
+      "defeat_or_death",
+      "emote",
+      "unknown",
+      "not_applicable"
+    ],
+    "background_type": [
+      "transparent",
+      "solid_color",
+      "complex",
+      "unknown"
+    ],
+    "render_family": [
+      "pixel_art",
+      "raster_illustration",
+      "unknown"
+    ]
+  }
+}
