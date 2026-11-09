@@ -73,7 +73,13 @@ onMounted(async () => {
     await loadDownloadedDataset(0)
     localReady.value = true
     await loadTagStats()
-    setStatus('Copie locale chargée. Les images sont servies depuis ce dossier.')
+    try {
+      const syncState = await $fetch<DatasetResponse>('/api/dataset-download-status')
+      if (syncState.status === 'error') setStatus(syncState.message || 'La dernière synchronisation Hugging Face est incomplète.', true)
+      else setStatus('Copie locale chargée. Les images sont servies depuis ce dossier.')
+    } catch {
+      setStatus('Copie locale chargée. Les images sont servies depuis ce dossier.')
+    }
   } catch {
     localReady.value = false
     await resumeDownloadIfActive()
