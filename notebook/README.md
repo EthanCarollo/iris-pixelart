@@ -53,3 +53,5 @@ Le notebook [`taxonomie_dataset.ipynb`](dataset/taxonomie_dataset.ipynb) annote 
 Le notebook [`arbre_taxonomie.ipynb`](dataset/arbre_taxonomie.ipynb) affiche les arbres et explique leurs dimensions. Chaque arbre est indépendant : une vue et une pose peuvent être combinées sans former une seule catégorie.
 
 La taxonomie distingue la forme du sujet (`subject_type`), sa structure corporelle (`body_plan`) et les ailes visibles (`wings`), afin de combiner par exemple humanoïde et bipède. Les annotations des anciennes versions restent dans leurs fichiers de travail.
+
+Les définitions de chaque branche et valeur sont dans `value_descriptions` du JSON ; elles sont affichées dans le notebook des arbres et transmises au modèle d’annotation.

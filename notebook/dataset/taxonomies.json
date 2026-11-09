@@ -1,5 +1,5 @@
 {
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "Dimensions visuelles indépendantes, chacune organisée en arbre. Les étiquettes sont les feuilles ; les branches servent à regrouper les valeurs. Plusieurs dimensions peuvent décrire le même sujet.",
   "hierarchies": {
     "asset_type": {
@@ -193,6 +193,131 @@
       "label": "Ailes visibles",
       "definition": "Présence visuelle d’ailes ; wings_not_visible signifie uniquement qu’aucune aile n’est visible sur cette image.",
       "applicability": "Pour une figure dont le corps est identifiable ; unknown si le cadrage ou la résolution ne permet pas de conclure ; not_applicable pour un objet, décor ou effet."
+    }
+  },
+  "value_descriptions": {
+    "asset_type": {
+      "sprite": "Éléments graphiques représentant un ou plusieurs sprites.",
+      "single_sprite": "Une seule image ou pose de sprite, sans grille d’autres sprites.",
+      "sprite_collection": "Plusieurs sprites ou frames réunis dans une même image.",
+      "sprite_sheet": "Planche contenant plusieurs sprites ou frames, pas nécessairement rangés en séquence.",
+      "animation_strip": "Bande de frames successives d’une même animation.",
+      "tile_set": "Ensemble de tuiles destinées à composer des décors ou niveaux.",
+      "background": "Image de décor ou de fond, plutôt qu’un sprite isolé.",
+      "ui_asset": "Élément destiné visuellement à une interface ou à du texte.",
+      "interface_element": "Bouton, cadre, icône d’interface ou autre élément de HUD.",
+      "font_glyph": "Glyphe ou caractère typographique isolé.",
+      "unknown": "Information incertaine, masquée ou impossible à déterminer à partir de cette image."
+    },
+    "subject_type": {
+      "animate_figure": "Figure visuellement identifiable comme un être ou un personnage animé, y compris un robot.",
+      "humanoid": "Figure à silhouette globalement humaine, généralement avec tête, torse et membres disposés comme ceux d’un humain.",
+      "human_like": "Humanoïde ressemblant visiblement à un humain ; les vêtements ou une armure seuls ne suffisent pas à déduire une espèce.",
+      "anthropomorphic": "Humanoïde avec des traits clairement animaux ou non humains, comme un museau ou des oreilles animales.",
+      "humanoid_robotic": "Figure humanoïde présentant des éléments mécaniques ou robotiques clairement visibles.",
+      "humanoid_unspecified": "Silhouette humanoïde reconnaissable dont les traits ne permettent pas de choisir un sous-type.",
+      "non_humanoid": "Figure animée dont le corps ne ressemble pas globalement à une silhouette humaine.",
+      "animal_like": "Figure non humanoïde ressemblant visuellement à un animal terrestre ou à un oiseau.",
+      "insect_like": "Figure non humanoïde ressemblant à un insecte, par exemple avec six pattes ou des antennes visibles.",
+      "arachnid_like": "Figure non humanoïde ressemblant à une araignée ou un scorpion, par sa forme ou ses nombreuses pattes visibles.",
+      "serpentine": "Figure non humanoïde dont le corps long et souple évoque un serpent.",
+      "aquatic_like": "Figure non humanoïde évoquant visiblement un poisson ou un autre animal aquatique.",
+      "amorphous": "Figure non humanoïde sans forme corporelle rigide identifiable, comme une masse ou un slime.",
+      "plant_like": "Figure animée non humanoïde dont l’apparence évoque une plante.",
+      "mechanical_non_humanoid": "Figure non humanoïde présentant clairement une structure robotique ou mécanique.",
+      "non_humanoid_unspecified": "Figure non humanoïde identifiable, mais dont le type précis reste incertain.",
+      "animate_unspecified": "Figure animée identifiable dont la silhouette ne permet pas de choisir humanoïde ou non humanoïde.",
+      "inanimate": "Objet ou élément visiblement non animé.",
+      "object": "Objet isolé ne correspondant pas clairement à une catégorie plus précise.",
+      "equipment": "Objet porté ou utilisé comme équipement.",
+      "weapon": "Objet identifiable comme arme, par exemple épée, arc ou lance.",
+      "armor": "Pièce d’armure ou de protection isolée.",
+      "projectile": "Projectile ou missile identifiable comme objet indépendant.",
+      "scene": "Scène ou décor plutôt qu’un sujet isolé.",
+      "environment": "Éléments de décor ou environnement, comme terrain, végétation ou architecture.",
+      "graphic": "Élément graphique, texte, interface ou effet visuel.",
+      "typography": "Texte, lettre ou symbole typographique.",
+      "interface": "Élément visuel d’interface, par exemple bouton, barre ou cadre.",
+      "effect": "Effet visuel tel que fumée, étincelle, explosion ou aura.",
+      "unknown": "Information incertaine, masquée ou impossible à déterminer à partir de cette image."
+    },
+    "view": {
+      "subject_angle": "Vue principalement définie par l’orientation horizontale du sujet.",
+      "front": "Sujet ou scène vu principalement de face.",
+      "side": "Sujet vu principalement de profil, depuis un côté.",
+      "back": "Sujet vu principalement de dos.",
+      "three_quarter": "Sujet vu en angle oblique, entre la face ou le dos et le profil.",
+      "vertical_angle": "Vue principalement définie par un angle au-dessus ou au-dessous du sujet.",
+      "top_down": "Vue depuis le dessus ou nettement en plongée.",
+      "bottom_up": "Vue depuis le dessous ou nettement en contre-plongée.",
+      "mixed": "Plusieurs points de vue distincts sont visibles dans la même image.",
+      "unknown": "Information incertaine, masquée ou impossible à déterminer à partir de cette image.",
+      "not_applicable": "Cette dimension ne s’applique pas au sujet ou au contenu de cette image."
+    },
+    "pose": {
+      "grounded": "Position du corps paraissant en appui sur une surface.",
+      "standing": "Corps en position debout.",
+      "lowered": "Corps abaissé ou placé près de la surface.",
+      "kneeling": "Corps en appui sur un ou les deux genoux.",
+      "crouching": "Corps accroupi, les jambes repliées sous le corps.",
+      "sitting": "Corps assis, le poids reposant sur le bassin ou une surface.",
+      "horizontal": "Corps allongé approximativement à l’horizontale.",
+      "lying": "Corps allongé sans orientation ventrale clairement identifiable.",
+      "prone": "Corps allongé sur le ventre ou face contre terre.",
+      "in_air": "Corps qui paraît ne pas être en appui sur une surface.",
+      "airborne": "Corps en suspension, sans vol clairement identifiable.",
+      "flying": "Corps dans une posture de vol visiblement identifiable.",
+      "unknown": "Information incertaine, masquée ou impossible à déterminer à partir de cette image.",
+      "not_applicable": "Cette dimension ne s’applique pas au sujet ou au contenu de cette image."
+    },
+    "action": {
+      "stationary": "Activité sans déplacement clairement visible.",
+      "idle": "Sujet manifestement au repos ; ne pas déduire une animation idle d’une image ambiguë.",
+      "emote": "Expression ou geste communicatif clairement visible.",
+      "movement": "Déplacement ou mouvement identifiable sur l’image.",
+      "walk": "Marche clairement suggérée par la posture ou le contexte visuel.",
+      "run": "Course clairement suggérée, distincte d’une marche.",
+      "jump": "Saut clairement identifiable.",
+      "fall": "Chute clairement identifiable.",
+      "fly": "Vol clairement identifiable comme action.",
+      "combat": "Action de combat clairement visible.",
+      "attack_melee": "Attaque rapprochée clairement identifiable, avec ou sans arme.",
+      "attack_ranged": "Attaque à distance clairement identifiable, par exemple tir ou lancement.",
+      "defeat_or_death": "Action ou état de défaite clairement représenté ; ne pas déduire la mort d’une simple position allongée.",
+      "unknown": "Information incertaine, masquée ou impossible à déterminer à partir de cette image.",
+      "not_applicable": "Cette dimension ne s’applique pas au sujet ou au contenu de cette image."
+    },
+    "background_type": {
+      "transparent": "L’image contient des pixels transparents ; cette information peut provenir du canal alpha.",
+      "opaque": "Le fichier ne présente pas de transparence visible.",
+      "solid_color": "Fond opaque d’une seule couleur ou approximativement uni.",
+      "complex": "Fond opaque avec des motifs, objets ou décor distincts.",
+      "unknown": "Information incertaine, masquée ou impossible à déterminer à partir de cette image."
+    },
+    "render_family": {
+      "pixel_art": "Rendu volontairement construit à partir de pixels visibles et de contours discrets.",
+      "raster_illustration": "Illustration matricielle dont le rendu ne présente pas clairement les caractéristiques du pixel art.",
+      "unknown": "Information incertaine, masquée ou impossible à déterminer à partir de cette image."
+    },
+    "body_plan": {
+      "legged": "Figure présentant des membres porteurs ou des jambes visibles.",
+      "biped": "Deux membres porteurs visibles ; une posture humaine ne suffit pas si les jambes sont masquées.",
+      "quadruped": "Quatre membres porteurs visibles.",
+      "multiped": "Plus de quatre membres porteurs visibles.",
+      "legged_unspecified": "Des jambes ou membres porteurs sont visibles mais leur nombre reste incertain.",
+      "legless": "Figure dont la structure visible ne comporte pas de jambes identifiables.",
+      "serpentine_body": "Corps allongé et souple sans jambes visibles, évoquant un serpent.",
+      "fish_like_body": "Corps sans jambes visibles évoquant un poisson, éventuellement avec nageoires.",
+      "amorphous_body": "Corps sans jambes visibles et sans structure rigide identifiable.",
+      "legless_unspecified": "Corps sans jambes visibles dont la structure précise est incertaine.",
+      "unknown": "Information incertaine, masquée ou impossible à déterminer à partir de cette image.",
+      "not_applicable": "Cette dimension ne s’applique pas au sujet ou au contenu de cette image."
+    },
+    "wings": {
+      "wings_present": "Une ou plusieurs ailes sont clairement visibles.",
+      "wings_not_visible": "Aucune aile n’est visible alors que le cadrage et la résolution permettent de l’évaluer ; ne prouve pas que le sujet n’en possède pas.",
+      "unknown": "Information incertaine, masquée ou impossible à déterminer à partir de cette image.",
+      "not_applicable": "Cette dimension ne s’applique pas au sujet ou au contenu de cette image."
     }
   }
 }
