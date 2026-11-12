@@ -5,6 +5,7 @@ type Annotation = {
   asset_id?: string
   source?: { root?: string; relative_path?: string }
   labels?: Record<string, unknown>
+  color_measurements?: Record<string, any>
   caption_candidate?: string
   need_rework?: boolean | null
   review_status?: string
@@ -17,6 +18,7 @@ const repoId = 'ethanzxv/pixelart-dataset'
 const defaultRemoteFile = 'annotations/dataset_lab_sync/20261112T093240Z/annotations_v3_4_color_partial.jsonl'
 const candidatePaths = [
   process.env.QWEN_ANNOTATIONS_PATH,
+  resolve(process.cwd(), '../notebook/dataset/taxonomy/taxonomy_work/annotations_v3_4_exact_palette.jsonl'),
   resolve(process.cwd(), '../notebook/dataset/taxonomy/taxonomy_work/annotations_v3_4_full_color.jsonl'),
   resolve(process.cwd(), 'notebook/dataset/taxonomy/taxonomy_work/annotations_v3_4_full_color.jsonl'),
   resolve(process.cwd(), 'data/qwen_annotations.jsonl')

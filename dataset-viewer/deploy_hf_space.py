@@ -12,7 +12,7 @@ from huggingface_hub import HfApi
 
 APP_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = APP_DIR.parent
-ANNOTATIONS = PROJECT_ROOT / "notebook/dataset/taxonomy/taxonomy_work/annotations_v3_4_full_color.jsonl"
+ANNOTATIONS = PROJECT_ROOT / "notebook/dataset/taxonomy/taxonomy_work/annotations_v3_4_exact_palette.jsonl"
 SPACE_NAME = "iris-pixelart-qwen38-viewer"
 
 

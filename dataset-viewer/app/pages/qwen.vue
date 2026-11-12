@@ -3,6 +3,12 @@ type Annotation = {
   asset_id?: string
   source?: { relative_path?: string; root?: string }
   labels?: Record<string, unknown>
+  color_measurements?: {
+    status?: string
+    distinct_rgba_color_count?: number
+    palette_hex?: Array<{ hex: string; alpha: number; rgba_hex: string; pixel_count: number; visible_pixel_fraction: number }>
+    training_canvas_16?: { size?: number[]; palette_hex?: Array<{ hex: string; pixel_count: number }> }
+  }
   caption_candidate?: string
   need_rework?: boolean | null
   review_status?: string
@@ -135,6 +141,22 @@ onUnmounted(() => clearTimeout(searchTimer))
           </div>
           <p class="qwen-caption">{{ row.caption_candidate || 'Aucune caption disponible.' }}</p>
           <p class="qwen-source">{{ row.source?.relative_path || 'Source inconnue' }}</p>
+          <section v-if="row.color_measurements?.status === 'measured'" class="exact-palette">
+            <div class="exact-palette-title"><strong>Palette exacte du PNG</strong><span>{{ row.color_measurements.distinct_rgba_color_count }} couleurs</span></div>
+            <div class="palette-swatches">
+              <span v-for="color in (row.color_measurements.palette_hex || []).slice(0, 20)" :key="color.rgba_hex" :title="`${color.rgba_hex} · ${color.pixel_count.toLocaleString('fr-FR')} pixels`" :style="{ backgroundColor: color.hex, opacity: color.alpha / 255 }"></span>
+            </div>
+            <details>
+              <summary>Codes hex et pixels de toutes les couleurs</summary>
+              <ul class="exact-palette-list">
+                <li v-for="color in row.color_measurements.palette_hex || []" :key="color.rgba_hex">
+                  <i :style="{ backgroundColor: color.hex, opacity: color.alpha / 255 }"></i>
+                  <code>{{ color.hex }}</code><span>alpha {{ color.alpha }}</span><strong>{{ color.pixel_count.toLocaleString('fr-FR') }} px</strong>
+                </li>
+              </ul>
+              <p v-if="row.color_measurements.training_canvas_16" class="training-palette-note">Après preprocessing training ({{ row.color_measurements.training_canvas_16.size?.join(' × ') }} px, fond blanc) : {{ (row.color_measurements.training_canvas_16.palette_hex || []).map(color => color.hex).join(', ') }}</p>
+            </details>
+          </section>
           <div class="qwen-taxonomy">
             <div v-for="(value, key) in row.labels || {}" :key="String(key)" class="qwen-tag-row">
               <span>{{ labelTitle(String(key)) }}</span><strong>{{ displayValue(value) }}</strong>
