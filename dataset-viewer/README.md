@@ -23,6 +23,8 @@ Puis ouvre l'adresse locale affichée par Nuxt.
 
 Le fichier local `dataset-viewer/.env` doit contenir `HF_TOKEN=...` avec un token autorisé à lire le dataset privé. Le fichier `.env.example` montre le format ; `.env` est ignoré par Git. Lance `npm run dev` ou `npm run preview` : le démarrage vérifie l’accès, synchronise le dépôt et construit l’index avant de lancer l’interface. Python 3 et Git sont requis. Les images Git LFS absentes sont chargées à la demande depuis Hugging Face par le serveur.
 
+Pour conserver toutes les images localement et éviter les limites de requêtes pendant l’entraînement, lance `npm run download:full` depuis `dataset-viewer/`. Git LFS est nécessaire. Le téléchargement reprend les objets déjà récupérés et retente les erreurs réseau ; les images sont ensuite disponibles dans `datasets/pixelart-dataset/.gitrepo/data/`. La taille et la durée dépendent du corpus et du débit réseau.
+
 Quand la copie est chargée, le panneau **Répartition globale du dataset** présente d’un côté les tags structurés des annotations disponibles et de l’autre les caractéristiques explicites tirées des légendes de toutes les images locales, indépendamment de la recherche et de la page affichée. La source HF contient actuellement un sous-ensemble d’images annotées; le viewer affiche sa couverture exacte. Les catégories de légendes incluent la forme, la vue, la pose/action, le fond, les dimensions, le type d’image et le dossier/jeu. Le champ de rôle de jeu est exclu; « character » s’affiche comme « humanoid » pour la forme du sujet. Les graphiques sont recalculés quand les fichiers locaux changent.
 
 ## Fichiers locaux

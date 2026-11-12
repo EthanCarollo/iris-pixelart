@@ -6,7 +6,8 @@
     "build": "nuxt build",
     "dev": "node scripts/start.mjs dev",
     "postinstall": "nuxt prepare",
-    "preview": "node scripts/start.mjs preview"
+    "preview": "node scripts/start.mjs preview",
+    "download:full": "node scripts/download-full.mjs"
   },
   "dependencies": {
     "nuxt": "^4.6.4"
