@@ -56,6 +56,10 @@ La taxonomie distingue la forme du sujet (`subject_type`), sa structure corporel
 
 Les définitions de chaque branche et valeur sont directement dans les nœuds du JSON ; elles sont affichées dans le notebook des arbres et transmises au modèle d’annotation.
 
+## Synchronisation du Dataset Lab
+
+Le notebook [sync_dataset_lab.ipynb](dataset/sync_dataset_lab.ipynb) prévisualise puis publie les snapshots d’annotations et les taxonomies dans un nouveau dossier horodaté du dépôt HF. Les fichiers bruts sont facultatifs et doivent être sélectionnés explicitement. Aucun fichier distant n’est supprimé.
+
 ## Évaluation CLIP
 
 Le notebook [`clip_score.ipynb`](evaluating/clip_score/clip_score.ipynb) compare les images de plusieurs modèles sur les mêmes prompts, avec un tableau apparié et une estimation d'incertitude. Les images doivent être générées avant l'évaluation ; le GPU distant utilisé pour les taxonomies n'est pas nécessaire.
