@@ -355,7 +355,7 @@ onUnmounted(() => {
         <h1>Dataset Viewer</h1>
         <p class="subtitle">Les images et leurs légendes sont téléchargées sur cet ordinateur puis parcourues localement.</p>
       </div>
-      <div class="privacy">Données du dataset stockées dans le dépôt local</div>
+      <div class="header-actions"><NuxtLink class="button secondary" to="/qwen">Annotations Qwen3.8 →</NuxtLink><div class="privacy">Données du dataset stockées dans le dépôt local</div></div>
     </header>
 
     <section class="hf-card" aria-labelledby="hfHeading">
