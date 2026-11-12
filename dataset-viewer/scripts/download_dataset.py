@@ -81,7 +81,22 @@ def pull_lfs(environment: dict[str, str]) -> None:
         write_status(status="downloading", done=total, total=total, message="Images Git LFS déjà à jour")
         return
     write_status(status="downloading", done=downloaded, total=total, message="Téléchargement des images Git LFS")
-    run(["git", "-C", str(REPO_DIR), "lfs", "fetch", "origin", "main"], environment=environment)
+    # Les objets déjà récupérés restent dans le cache LFS entre les tentatives.
+    # Un nombre de connexions modéré et des pauses évitent de saturer le Hub.
+    for attempt in range(1, 7):
+        try:
+            run(["git", "-C", str(REPO_DIR), "lfs", "fetch", "origin", "main"], environment=environment)
+            break
+        except RuntimeError:
+            # Rend utilisables tout de suite les objets déjà présents localement.
+            run(["git", "-C", str(REPO_DIR), "lfs", "checkout"], environment=environment)
+            if attempt == 6:
+                raise
+            downloaded, total = lfs_counts(environment)
+            delay = min(60 * attempt, 300)
+            write_status(status="downloading", done=downloaded, total=total,
+                         message=f"Reprise Git LFS dans {delay} s après une erreur réseau")
+            time.sleep(delay)
     run(["git", "-C", str(REPO_DIR), "lfs", "checkout"], environment=environment)
     downloaded, total = lfs_counts(environment)
     if downloaded != total:
@@ -132,7 +147,7 @@ def main() -> int:
             run(["git", "-C", str(REPO_DIR), "merge", "--ff-only", "FETCH_HEAD"], environment=git_environment(skip_smudge=True))
 
         environment = git_environment(skip_smudge=False)
-        run(["git", "-C", str(REPO_DIR), "config", "lfs.concurrenttransfers", "24"], environment=environment)
+        run(["git", "-C", str(REPO_DIR), "config", "lfs.concurrenttransfers", "4"], environment=environment)
         if "--metadata-only" not in sys.argv:
             pull_lfs(environment)
         image_count = build_viewer_index()
