@@ -4,9 +4,9 @@
   "type": "module",
   "scripts": {
     "build": "nuxt build",
-    "dev": "nuxt dev",
+    "dev": "node scripts/start.mjs dev",
     "postinstall": "nuxt prepare",
-    "preview": "nuxt preview"
+    "preview": "node scripts/start.mjs preview"
   },
   "dependencies": {
     "nuxt": "^4.6.4"

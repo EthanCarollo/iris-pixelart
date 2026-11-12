@@ -13,7 +13,7 @@ async function startDownloader(token: string) {
     : [['python3'], ['python']]
 
   for (const [command, ...args] of candidates) {
-    const child = spawn(command!, [...args, resolve(projectRoot, 'scripts', 'download_dataset.py')], {
+    const child = spawn(command!, [...args, resolve(projectRoot, 'scripts', 'download_dataset.py'), '--metadata-only'], {
       cwd: projectRoot,
       env: { ...process.env, HF_ACCESS_TOKEN: token },
       detached: true,
@@ -36,9 +36,8 @@ async function startDownloader(token: string) {
 
 export default defineEventHandler(async (event) => {
   const syncRequested = getQuery(event).sync === '1'
-  const authorization = getHeader(event, 'authorization')
-  const token = authorization?.startsWith('Bearer ') ? authorization.slice(7).trim() : ''
-  if (!token) throw createError({ statusCode: 401, statusMessage: 'Saisis un jeton Hugging Face.' })
+  const token = process.env.HF_TOKEN?.trim() || ''
+  if (!token) throw createError({ statusCode: 503, statusMessage: 'HF_TOKEN absent du fichier .env serveur.' })
 
   if (!syncRequested) {
     try {

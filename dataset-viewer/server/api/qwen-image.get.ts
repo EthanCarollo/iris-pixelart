@@ -1,4 +1,4 @@
-import { access } from 'node:fs/promises'
+import { open } from 'node:fs/promises'
 import { resolve, sep } from 'node:path'
 
 const repoId = 'ethanzxv/pixelart-dataset'
@@ -25,7 +25,14 @@ export default defineEventHandler(async (event) => {
     const file = resolve(root, relativePath)
     if (!file.startsWith(`${root}${sep}`)) continue
     try {
-      await access(file)
+      const handle = await open(file, 'r')
+      let valid = false
+      try {
+        const signature = Buffer.alloc(8)
+        const { bytesRead } = await handle.read(signature, 0, 8, 0)
+        valid = bytesRead === 8 && signature.equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))
+      } finally { await handle.close() }
+      if (!valid) continue
       setResponseHeader(event, 'Content-Type', 'image/png')
       setResponseHeader(event, 'Cache-Control', 'private, max-age=86400')
       return sendStream(event, createReadStream(file))

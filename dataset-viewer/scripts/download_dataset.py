@@ -133,9 +133,10 @@ def main() -> int:
 
         environment = git_environment(skip_smudge=False)
         run(["git", "-C", str(REPO_DIR), "config", "lfs.concurrenttransfers", "24"], environment=environment)
-        pull_lfs(environment)
+        if "--metadata-only" not in sys.argv:
+            pull_lfs(environment)
         image_count = build_viewer_index()
-        write_status(status="complete", done=image_count, total=image_count, images=image_count, message="Dataset téléchargé et indexé")
+        write_status(status="complete", done=image_count, total=image_count, images=image_count, message="Dataset synchronisé et indexé")
         print(f"Indexed {image_count} local images", flush=True)
         return 0
     except Exception as error:  # The token is never included in status or log output.

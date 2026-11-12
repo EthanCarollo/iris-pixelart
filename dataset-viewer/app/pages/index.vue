@@ -28,7 +28,6 @@ type TagStats = {
 
 const datasetId = 'ethanzxv/pixelart-dataset'
 const pageSize = 100
-const tokenInput = ref('')
 const search = ref('')
 const currentPage = ref(0)
 const dataset = shallowRef<DatasetView | null>(null)
@@ -139,24 +138,16 @@ function tagPercent(count: number, denominator: number) {
 }
 
 async function startDownload(sync = false) {
-  const token = tokenInput.value.trim()
-  if (!token) {
-    setStatus('Saisis un jeton Hugging Face avec accès en lecture au dépôt.', true)
-    return
-  }
-
   downloadActive.value = true
   downloadStage.value = 'Démarrage du téléchargement…'
   downloadDone.value = 0
   downloadTotal.value = 0
-  setStatus('Le jeton est transmis au processus local de téléchargement.')
+  setStatus('Synchronisation avec Hugging Face…')
   try {
     const response = await $fetch<DatasetResponse>('/api/dataset-download', {
       method: 'POST',
-      query: sync ? { sync: '1' } : undefined,
-      headers: { Authorization: `Bearer ${token}` }
+      query: sync ? { sync: '1' } : undefined
     })
-    tokenInput.value = ''
     if (response.status === 'complete') {
       await finishDownload()
       return
@@ -223,7 +214,7 @@ async function finishDownload() {
   currentPage.value = 0
   await loadDownloadedDataset(0)
   await loadTagStats()
-  setStatus('Dataset téléchargé et chargé depuis le disque local.')
+  setStatus('Index du dataset synchronisé et chargé.')
 }
 
 async function loadLocalFile(file?: File) {
@@ -360,14 +351,10 @@ onUnmounted(() => {
 
     <section class="hf-card" aria-labelledby="hfHeading">
       <div class="hf-card-head">
-        <div><h2 id="hfHeading">{{ localReady ? 'Dataset téléchargé' : 'Télécharger le dataset privé' }}</h2><p>{{ localReady ? 'La copie locale est chargée par défaut.' : 'Un jeton Hugging Face est nécessaire pour récupérer le dépôt complet.' }}</p></div>
+        <div><h2 id="hfHeading">{{ localReady ? 'Dataset téléchargé' : 'Télécharger le dataset privé' }}</h2><p>{{ localReady ? 'La copie locale est chargée par défaut.' : 'Les métadonnées sont synchronisées au démarrage et les images chargées à la demande.' }}</p></div>
         <div class="hf-head-actions"><button v-if="localReady && !syncPrompt" class="button secondary" type="button" :disabled="downloadActive" @click="syncPrompt = true">Resynchroniser Hugging Face</button><span class="hf-brand">🤗 HF</span></div>
       </div>
       <form v-if="!localReady || syncPrompt" class="hf-controls download-controls" @submit.prevent="startDownload(syncPrompt)">
-        <div class="field token-field">
-          <label for="hfToken">{{ syncPrompt ? 'Jeton HF pour resynchroniser le dépôt' : 'Jeton Hugging Face avec accès au dépôt' }}</label>
-          <input id="hfToken" v-model="tokenInput" type="password" autocomplete="off" placeholder="Colle ton jeton ici" :disabled="downloadActive">
-        </div>
         <div class="download-actions"><button class="button" type="submit" :disabled="downloadActive">{{ downloadActive ? 'Synchronisation…' : syncPrompt ? 'Resynchroniser' : 'Télécharger localement' }}</button><button v-if="syncPrompt" class="button secondary" type="button" :disabled="downloadActive" @click="syncPrompt = false">Annuler</button></div>
       </form>
       <div class="dataset-name">{{ datasetId }}</div>
@@ -376,7 +363,7 @@ onUnmounted(() => {
         <div class="progress-track"><div class="progress-fill" :style="{ width: `${downloadProgress}%` }"></div></div>
         <span>{{ downloadTotal ? `${downloadProgress}%` : 'Connexion…' }}</span>
       </div>
-      <p class="hf-help">Le jeton est transmis au téléchargeur local et n'est pas enregistré dans le dépôt ni dans le navigateur. Les fichiers téléchargés sont exclus des commits Git.</p>
+      <p class="hf-help">Le token est lu côté serveur depuis le fichier .env. Les images sont chargées à la demande.</p>
     </section>
 
     <section class="dropzone" @dragover.prevent @drop.prevent="onDrop">
@@ -391,7 +378,7 @@ onUnmounted(() => {
     <section v-if="!dataset" class="empty-state">
       <div class="empty-mark" aria-hidden="true">▦</div>
       <h2>{{ downloadActive ? 'Préparation du dataset local' : 'Le dataset apparaîtra ici' }}</h2>
-      <p>{{ downloadActive ? 'Les images et leurs légendes sont en cours de téléchargement puis d’indexation.' : 'Télécharge le dépôt avec ton jeton Hugging Face ou ouvre un fichier de données local.' }}</p>
+      <p>{{ downloadActive ? 'Les images et leurs légendes sont en cours de téléchargement puis d’indexation.' : 'Synchronise le dataset ou ouvre un fichier de données local.' }}</p>
     </section>
 
     <section v-else class="workspace" aria-live="polite">

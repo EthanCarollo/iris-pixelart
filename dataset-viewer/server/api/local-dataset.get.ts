@@ -1,14 +1,18 @@
-import { readFile } from 'node:fs/promises'
+import { readFile, stat } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
 type LocalImage = { path: string; caption: string; folder: string; name: string }
 
 const datasetRoot = resolve(process.cwd(), 'datasets', 'pixelart-dataset')
 let indexPromise: Promise<LocalImage[]> | null = null
+let indexMtime = -1
 
 async function loadIndex(): Promise<LocalImage[]> {
-  if (!indexPromise) {
-    indexPromise = readFile(resolve(datasetRoot, 'viewer-index.json'), 'utf8')
+  const indexPath = resolve(datasetRoot, 'viewer-index.json')
+  const mtime = (await stat(indexPath)).mtimeMs
+  if (!indexPromise || mtime !== indexMtime) {
+    indexMtime = mtime
+    indexPromise = readFile(indexPath, 'utf8')
       .then((content) => JSON.parse(content) as LocalImage[])
       .catch((error) => {
         indexPromise = null
