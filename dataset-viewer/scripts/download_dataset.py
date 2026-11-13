@@ -3,13 +3,17 @@
 from __future__ import annotations
 
 import base64
+import hashlib
 import json
 import os
 import pathlib
 import subprocess
 import sys
+import tempfile
 import threading
 import time
+import urllib.parse
+import urllib.request
 
 
 REPO_ID = "ethanzxv/pixelart-dataset"
@@ -75,6 +79,61 @@ def lfs_counts(environment: dict[str, str]) -> tuple[int, int]:
     return downloaded, len(lines)
 
 
+def recover_small_lfs_remainder(environment: dict[str, str], limit: int = 100) -> bool:
+    """Recover a small set of LFS objects via the Hub, verifying their Git OIDs."""
+    result = subprocess.run(
+        ["git", "-C", str(REPO_DIR), "lfs", "ls-files", "--long"],
+        cwd=ROOT, env=environment, text=True, capture_output=True,
+    )
+    if result.returncode:
+        return False
+    missing = []
+    for line in result.stdout.splitlines():
+        parts = line.split(maxsplit=2)
+        if len(parts) == 3 and parts[1] == "-":
+            missing.append((parts[0], parts[2]))
+    if not missing or len(missing) > limit:
+        return not missing
+
+    class SafeRedirect(urllib.request.HTTPRedirectHandler):
+        def redirect_request(self, req, fp, code, msg, headers, newurl):
+            redirected = super().redirect_request(req, fp, code, msg, headers, newurl)
+            if redirected and urllib.parse.urlsplit(newurl).netloc != urllib.parse.urlsplit(req.full_url).netloc:
+                redirected.remove_header("Authorization")
+            return redirected
+
+    opener = urllib.request.build_opener(SafeRedirect())
+    for index, (oid, name) in enumerate(missing, start=1):
+        path = (REPO_DIR / name).resolve()
+        if not path.is_relative_to(REPO_DIR.resolve()):
+            return False
+        url = f"{REPO_URL}/resolve/main/{urllib.parse.quote(name, safe='/')}"
+        request = urllib.request.Request(url, headers={"Authorization": f"Bearer {TOKEN}"})
+        object_path = REPO_DIR / ".git" / "lfs" / "objects" / oid[:2] / oid[2:4] / oid
+        object_path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = None
+        try:
+            digest = hashlib.sha256()
+            with opener.open(request, timeout=60) as response, tempfile.NamedTemporaryFile(dir=object_path.parent, delete=False) as output:
+                temporary = pathlib.Path(output.name)
+                while chunk := response.read(1024 * 1024):
+                    digest.update(chunk)
+                    output.write(chunk)
+            if digest.hexdigest() != oid:
+                return False
+            temporary.replace(object_path)
+            temporary = None
+        except (OSError, ValueError):
+            return False
+        finally:
+            if temporary is not None:
+                temporary.unlink(missing_ok=True)
+        write_status(status="downloading", done=index, total=len(missing), message="Récupération des derniers objets LFS")
+    run(["git", "-C", str(REPO_DIR), "lfs", "checkout"], environment=environment)
+    downloaded, total = lfs_counts(environment)
+    return total > 0 and downloaded == total
+
+
 def pull_lfs(environment: dict[str, str]) -> None:
     downloaded, total = lfs_counts(environment)
     if total and downloaded == total:
@@ -90,6 +149,8 @@ def pull_lfs(environment: dict[str, str]) -> None:
         except RuntimeError:
             # Rend utilisables tout de suite les objets déjà présents localement.
             run(["git", "-C", str(REPO_DIR), "lfs", "checkout"], environment=environment)
+            if recover_small_lfs_remainder(environment):
+                break
             if attempt == 6:
                 raise
             downloaded, total = lfs_counts(environment)
