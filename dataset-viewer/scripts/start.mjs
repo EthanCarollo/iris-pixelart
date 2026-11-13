@@ -29,7 +29,7 @@ if (!response.ok) {
   process.exit(1)
 }
 console.log('Synchronisation de l’index et des métadonnées Hugging Face…')
-const sync = spawnSync('python3', ['scripts/download_dataset.py', '--metadata-only'], { stdio: 'inherit', env: process.env })
+const sync = spawnSync(process.platform === 'win32' ? 'python' : 'python3', ['scripts/download_dataset.py', '--metadata-only'], { stdio: 'inherit', env: process.env })
 if (sync.status !== 0) {
   console.error('Échec de la synchronisation du dataset. Le viewer ne sera pas lancé.')
   process.exit(sync.status || 1)
