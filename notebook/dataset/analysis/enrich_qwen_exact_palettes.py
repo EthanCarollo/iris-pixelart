@@ -120,6 +120,15 @@ def read_complete_jsonl(path: Path) -> list[dict[str, Any]]:
     return rows
 
 
+def cached_or_downloaded_image(relative_path: str, token: str | bool) -> Path:
+    filename = f"data/{relative_path.replace(chr(92), '/')}"
+    try:
+        return Path(hf_hub_download(repo_id=DATASET_REPO, repo_type="dataset", filename=filename,
+                                    token=token, local_files_only=True))
+    except Exception:
+        return Path(hf_hub_download(repo_id=DATASET_REPO, repo_type="dataset", filename=filename, token=token))
+
+
 def measure_row(index: int, row: dict[str, Any], image_root: Path, token: str | bool) -> tuple[int, dict[str, Any], str]:
     source = row.get("source", {})
     relative_path = source.get("relative_path")
@@ -134,11 +143,8 @@ def measure_row(index: int, row: dict[str, Any], image_root: Path, token: str | 
             measurements = exact_palette(local_path)
         except (OSError, UnidentifiedImageError, ValueError):
             # The existing Git checkout may contain a 129-byte Git LFS pointer rather than PNG bytes.
-            downloaded = hf_hub_download(
-                repo_id=DATASET_REPO, repo_type="dataset",
-                filename=f"data/{relative_path.replace(chr(92), '/')}", token=token,
-            )
-            measurements = exact_palette(Path(downloaded))
+            downloaded = cached_or_downloaded_image(str(relative_path), token)
+            measurements = exact_palette(downloaded)
         row["color_measurements"] = {"status": "measured", **measurements}
         return index, row, "measured"
     except FileNotFoundError:
@@ -156,9 +162,11 @@ def measure_row(index: int, row: dict[str, Any], image_root: Path, token: str | 
 def measure_dataset_asset(
     index: int, row: dict[str, Any], image_root: Path, token: str | bool
 ) -> tuple[int, dict[str, Any], str]:
-    image = str(row.get("image", ""))
+    image = str(row.get("image") or row.get("file_name") or "")
     marker = "/api/sprites/"
     relative_path = image.split(marker, 1)[1] if marker in image else image.lstrip("/")
+    if relative_path.startswith("data/"):
+        relative_path = relative_path[5:]
     result: dict[str, Any] = {
         "asset_id": row.get("id"),
         "source": {"root": "data", "relative_path": relative_path},
@@ -175,11 +183,8 @@ def measure_dataset_asset(
             measurements = exact_palette(local_path)
         except (OSError, UnidentifiedImageError, ValueError):
             # Git LFS checkouts can contain a pointer instead of the actual image bytes.
-            downloaded = hf_hub_download(
-                repo_id=DATASET_REPO, repo_type="dataset",
-                filename=f"data/{relative_path.replace(chr(92), '/')}", token=token,
-            )
-            measurements = exact_palette(Path(downloaded))
+            downloaded = cached_or_downloaded_image(str(relative_path), token)
+            measurements = exact_palette(downloaded)
         result["color_measurements"] = {"status": "measured", **measurements}
         return index, result, "measured"
     except FileNotFoundError:
