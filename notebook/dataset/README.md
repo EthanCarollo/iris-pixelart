@@ -1,5 +1,7 @@
 # Dataset Lab
 
+Pour installer le projet ailleurs et reprendre les annotations sauvegardées, voir [REPRISE.md](REPRISE.md).
+
 - analysis/: `analyse_dataset.ipynb` pour les annotations Qwen, `analyse_hex_colors.ipynb` pour les couleurs et leurs combinaisons, et `data_structure.ipynb` pour la taxonomie hiérarchique.
 - taxonomy/: taxonomies visuelles, palettes et annotations Qwen/Strata.
 - sync_dataset_lab.ipynb: prévisualiser puis synchroniser les annotations vers Hugging Face; les assets bruts sont sélectionnés explicitement et les uploads sont append-only.
