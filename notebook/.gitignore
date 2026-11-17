@@ -5,3 +5,7 @@ training/iris_sprite_lora_work/
 dataset/taxonomy/taxonomy_work/
 
 evaluating/clip_score/work/
+
+dataset/analysis/mirage_work/
+dataset/taxonomy/mirage_work/
+dataset/taxonomy/lfm3_work/

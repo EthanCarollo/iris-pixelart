@@ -1,0 +1,5 @@
+vllm==0.34.0
+# Keep the compiler, CRT and NVVM aligned with PyTorch's CUDA 13.0 runtime.
+nvidia-cuda-nvcc==13.0.88
+nvidia-cuda-crt==13.0.88
+nvidia-nvvm==13.0.88
