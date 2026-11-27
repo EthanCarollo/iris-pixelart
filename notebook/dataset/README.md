@@ -59,6 +59,21 @@ Pour reprendre le traitement distant déjà préparé :
 notebook/dataset/taxonomy/lfm3_work/.venv/bin/python notebook/dataset/taxonomy/scripts/start_lfm3_remote.py --all --workers 128
 ```
 
+Pour annoter une collection Atlas, donne au lanceur le clone du dataset, le SHA à traiter et un dossier de résultats distinct. Le serveur GPU calcule via le tunnel SSH, et le client lit les PNG du clone. Pour un objet Git LFS absent du clone, le client demande le fichier à Atlas à la révision indiquée avec `ATLAS_TOKEN` ou le PAT du trousseau Git.
+
+```bash
+atlas=notebook/dataset/taxonomy/lfm3_work/atlas_dataset
+run=notebook/dataset/taxonomy/lfm3_work/remote/atlas-duelyst-bf16
+python notebook/dataset/taxonomy/scripts/start_lfm3_remote.py \
+  --atlas-checkout "$atlas" --revision "$(git -C "$atlas" rev-parse HEAD)" \
+  --path-prefix data/external/duelyst_cc0/sprites --all --workers 96 --output "$run"
+
+python notebook/dataset/taxonomy/scripts/sync_lfm3_checkpoint.py \
+  --atlas-checkout "$atlas" --source "$run" --upload
+```
+
+Pour reprendre la même file, réutilise la révision du `run_manifest.json` du traitement. La publication Atlas ajoute un checkpoint horodaté à `main` sous `annotations/lfm3_vl_bf16/checkpoints/`.
+
 L'authentification du tunnel est lue dans `lfm3_work/remote/ssh-password`, fichier local ignoré par Git et protégé en mode 600. Aucun mot de passe n'est inscrit dans le code ni les commandes. Le tunnel et le runner persistent après fermeture du terminal. Le runner utilise `caffeinate -i` sur le Mac. Les résultats BF16 sont dans **`taxonomy/lfm3_work/remote/full_bf16/`**, séparés des essais Mac/Qwen. `progress.json` donne le débit des images, celui des tokens de sortie et l'ETA de la file connue ; `self_review` contient la première proposition et les corrections. Un seuil d'espace libre arrête la soumission de nouvelles tâches avant de remplir le disque.
 
 Sur le serveur, l'environnement est `/home/eth/iris-lfm3-vllm/.venv` et les poids sont dans `/home/eth/iris-lfm3-vllm/model`. Le démarrage reproductible utilise `scripts/serve_lfm3_vllm.py`. Installer `requirements-vllm-lfm3.txt` dans un environnement Python 3.12 isolé : NVCC, CRT et NVVM sont épinglés ensemble à CUDA 13.0 pour correspondre au runtime PyTorch. Le script expose le layout `lib64` attendu par le linker CUDA à partir des wheels NVIDIA.

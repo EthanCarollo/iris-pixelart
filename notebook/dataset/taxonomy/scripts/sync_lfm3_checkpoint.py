@@ -12,11 +12,12 @@ import shutil
 import sqlite3
 import subprocess
 import tarfile
+import tempfile
 
 from dotenv import load_dotenv
 from huggingface_hub import HfApi, CommitOperationAdd, hf_hub_download
 
-from annotate_lfm3 import ROOT, unpack_record
+from annotate_lfm3 import ATLAS_URL, ROOT, unpack_record
 from lfm3_schema import load_taxonomies, validate
 
 WORK = ROOT / 'notebook/dataset/taxonomy/lfm3_work'
@@ -116,7 +117,7 @@ def prepare_snapshot(source, staging):
                'model_revision': manifest['model_revision'], 'self_review': True,
                'human_verified': False, 'complete': all(state == 'done' for state in statuses),
                'resume': 'Decompress SQLite and inventory; rebase relative crop local_path values to the restored directory.',
-               'export': 'annotations_lfm3.jsonl.gz merges CPU and GPU; source.dataset_path locates each image on the Hub.'}
+               'export': 'annotations_lfm3.jsonl.gz merges CPU and GPU; source.dataset_path locates each image in the dataset.'}
     write_json(staging / 'summary.json', summary)
     return summary, assets
 
@@ -198,23 +199,90 @@ def publish(staging, summary, assets, token, snapshot_id):
             'unique_derived_images': len(assets)}
 
 
+def publish_atlas(checkout, staging, summary, assets, snapshot_id):
+    """Append the checkpoint without switching branches in the inference checkout."""
+    def git(root, *args):
+        return subprocess.check_output(['git', '-C', str(root), *args])
+
+    if git(checkout, 'remote', 'get-url', 'origin').decode().strip() != ATLAS_URL:
+        raise ValueError('Expected the Atlas dataset SSH origin')
+    git(checkout, 'fetch', '--no-tags', 'origin', 'refs/heads/main')
+    base = git(checkout, 'rev-parse', 'FETCH_HEAD').decode().strip()
+    prefix = f'annotations/lfm3_vl_bf16/checkpoints/{snapshot_id}'
+    if git(checkout, 'ls-tree', base, '--', prefix):
+        raise ValueError('Checkpoint already exists; use a fresh snapshot ID')
+    available = set(git(checkout, 'ls-tree', '-rz', '--name-only', base, '--',
+                        'data/', 'source_sheets/').decode().split('\0'))
+    with gzip.open(staging / 'annotations_lfm3.jsonl.gz', 'rt', encoding='utf-8') as stream:
+        for line in stream:
+            name = json.loads(line)['source']['dataset_path']
+            if name not in available and name not in assets:
+                raise ValueError(f'Snapshot references an image absent from Atlas: {name}')
+    with tempfile.TemporaryDirectory(prefix='lfm-atlas-', dir=staging.parent) as temporary:
+        worktree = Path(temporary) / 'publish'
+        git(checkout, 'worktree', 'add', '--detach', '--no-checkout', str(worktree), base)
+        try:
+            git(worktree, 'read-tree', base)
+            (worktree / '.gitattributes').write_bytes(git(checkout, 'show', f'{base}:.gitattributes'))
+            for file in staging.iterdir():
+                if file.is_file():
+                    target = worktree / prefix / file.name
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copyfile(file, target)
+            new_assets = []
+            for name, local in assets.items():
+                if name in available:
+                    payload = git(checkout, 'show', f'{base}:{name}')
+                    checksum = digest(local)
+                    if hashlib.sha256(payload).hexdigest() != checksum and (
+                            f'oid sha256:{checksum}\n'.encode() not in payload
+                            or not payload.startswith(b'version https://git-lfs.github.com/spec/v1\n')):
+                        raise ValueError(f'Content-addressed image collision: {name}')
+                    continue
+                target = worktree / name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(local, target)
+                new_assets.append(name)
+            git(worktree, 'add', '--', prefix)
+            for start in range(0, len(new_assets), 250):
+                git(worktree, 'add', '--', *new_assets[start:start + 250])
+            git(worktree, 'commit', '--quiet', '-m',
+                f'feat(annotations): snapshot {summary["annotations"]} reviewed LFM3 annotations')
+            commit = git(worktree, 'rev-parse', 'HEAD').decode().strip()
+            git(worktree, 'push', 'origin', 'HEAD:refs/heads/main')
+            remote = git(worktree, 'ls-remote', 'origin', 'refs/heads/main').decode().split()
+            if not remote or remote[0] != commit:
+                raise ValueError('Atlas main changed before checkpoint verification')
+        finally:
+            git(checkout, 'worktree', 'remove', '--force', str(worktree))
+    return {'repo': ATLAS_URL, 'commit': commit, 'checkpoint': prefix,
+            'annotations': summary['annotations'], 'unique_derived_images': len(assets)}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--source', type=Path, default=WORK / 'remote/full_bf16')
     parser.add_argument('--snapshot-id', default=datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ'))
     parser.add_argument('--upload', action='store_true', help='Publish after preparing and validating the snapshot')
+    parser.add_argument('--atlas-checkout', type=Path, help='Publish to Atlas via this dataset checkout')
     args = parser.parse_args()
     load_dotenv(ROOT / 'dataset-viewer/.env', override=False)
     staging = WORK / 'sync' / args.snapshot_id
     summary, assets = prepare_snapshot(args.source.resolve(), staging)
-    bundle_experiments(staging)
+    if not args.atlas_checkout:
+        bundle_experiments(staging)
     code_revision = subprocess.check_output(['git', '-C', str(ROOT), 'rev-parse', 'HEAD'], text=True).strip()
     files = {path.relative_to(staging).as_posix(): {'sha256': digest(path), 'size': path.stat().st_size}
              for path in staging.rglob('*') if path.is_file() and path.relative_to(staging).parts[0] != 'crops'}
     write_json(staging / 'manifest.json', {**summary, 'code_revision': code_revision, 'files': files})
     print(json.dumps(summary, ensure_ascii=False, indent=2), flush=True)
     if args.upload:
-        receipt = publish(staging, summary, assets, os.environ.get('HF_TOKEN') or os.environ.get('HUGGINGFACE_HUB_TOKEN'), args.snapshot_id)
+        if args.atlas_checkout:
+            receipt = publish_atlas(args.atlas_checkout.resolve(), staging, summary, assets, args.snapshot_id)
+        elif summary['dataset_repo'] == ATLAS_URL:
+            parser.error('Specify --atlas-checkout when publishing annotations produced from Atlas')
+        else:
+            receipt = publish(staging, summary, assets, os.environ.get('HF_TOKEN') or os.environ.get('HUGGINGFACE_HUB_TOKEN'), args.snapshot_id)
         write_json(staging / 'upload_receipt.json', receipt)
         print(json.dumps(receipt, indent=2), flush=True)
     else:

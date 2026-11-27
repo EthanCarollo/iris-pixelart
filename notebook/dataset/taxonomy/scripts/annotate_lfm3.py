@@ -22,7 +22,7 @@ import threading
 import time
 import urllib.error
 import urllib.request
-from urllib.parse import quote, urlsplit
+from urllib.parse import quote, urlencode, urlsplit
 import zlib
 
 from dotenv import load_dotenv
@@ -36,6 +36,8 @@ from split_sprite_sheets import propose_crops, save_crop
 ROOT = Path(__file__).resolve().parents[4]
 DEFAULT_LOCAL = ROOT.parent / 'ds/mother3-sync-latest-worktree'
 WORK = ROOT / 'notebook/dataset/taxonomy/lfm3_work'
+ATLAS_URL = 'ssh://git@atlas.methil.group:2222/sprite-pixelart-dataset.git'
+ATLAS_RAW = 'https://atlas.methil.group/api/repos/sprite-pixelart-dataset/raw'
 EXTENSIONS = {'.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp', '.tif', '.tiff', '.avif'}
 SHEET_TYPES = {'sprite_sheet', 'animation_strip', 'tile_set'}
 _source_downloads = threading.BoundedSemaphore(8)
@@ -57,16 +59,27 @@ def inventory(args, token):
         if not document.get('complete'):
             raise ValueError('Refusing an incomplete inventory')
         return document
-    api = HfApi(token=token)
-    revision = api.repo_info(args.repo, repo_type='dataset', revision=args.revision).sha
     local_revision = None
     if args.local_root.is_dir():
         result = subprocess.run(['git', '-C', str(args.local_root), 'rev-parse', 'HEAD'], capture_output=True, text=True)
         if result.returncode == 0:
             local_revision = result.stdout.strip()
-    if local_revision == revision:
-        names = subprocess.check_output(['git', '-C', str(args.local_root), 'ls-tree', '-rz', '--name-only', revision]).decode().split('\0')
-        origin = 'git_ls_tree_at_exact_hub_commit'
+    if getattr(args, 'atlas_checkout', None):
+        revision = subprocess.check_output(
+            ['git', '-C', str(args.atlas_checkout), 'rev-parse', '--verify', args.revision + '^{commit}'],
+            text=True,
+        ).strip() if args.revision != 'main' else local_revision
+        if not revision:
+            raise ValueError('Atlas checkout has no checked out commit')
+        origin = 'atlas_git_tree'
+    else:
+        api = HfApi(token=token)
+        revision = api.repo_info(args.repo, repo_type='dataset', revision=args.revision).sha
+        origin = 'git_ls_tree_at_exact_hub_commit' if local_revision == revision else 'paginated_hub_tree'
+    if origin != 'paginated_hub_tree':
+        names = subprocess.check_output(
+            ['git', '-C', str(args.local_root), 'ls-tree', '-rz', '--name-only', revision]
+        ).decode().split('\0')
     else:
         # RepoInfo.siblings is truncated for large repos. Always paginate the full tree.
         names = []
@@ -148,7 +161,8 @@ def source_path(name, args, revision, token):
         if not pointer:
             # Only use actual files from the matching immutable dataset checkout.
             return local
-    if getattr(args, 'ephemeral_downloads', False):
+    atlas = getattr(args, 'atlas_checkout', None)
+    if atlas or getattr(args, 'ephemeral_downloads', False):
         class SafeRedirect(urllib.request.HTTPRedirectHandler):
             def redirect_request(self, request, fp, code, msg, headers, url):
                 redirected = super().redirect_request(request, fp, code, msg, headers, url)
@@ -158,7 +172,12 @@ def source_path(name, args, revision, token):
         destination = temporary_source_path(args, name)
         destination.parent.mkdir(exist_ok=True)
         partial = destination.with_suffix(destination.suffix + '.part')
-        url = f'https://huggingface.co/datasets/{args.repo}/resolve/{revision}/{quote(name, safe="/")}'
+        if atlas:
+            if not token:
+                raise RuntimeError('Atlas file needs Git LFS hydration or an Atlas PAT in ATLAS_TOKEN/the Git credential helper')
+            url = ATLAS_RAW + '?' + urlencode({'ref': revision, 'path': name})
+        else:
+            url = f'https://huggingface.co/datasets/{args.repo}/resolve/{revision}/{quote(name, safe="/")}'
         headers = {'Authorization': 'Bearer ' + token} if token else {}
         opener = urllib.request.build_opener(SafeRedirect())
         with _source_downloads:
@@ -172,6 +191,10 @@ def source_path(name, args, revision, token):
                         raise
                     delay = exc.headers.get('Retry-After', '')
                     time.sleep(min(30, int(delay)) if delay.isdigit() else 2 ** (attempt + 1))
+        if atlas:
+            with partial.open('rb') as stream:
+                if stream.read(42).startswith(b'version https://git-lfs.github.com/spec/v1'):
+                    raise FileNotFoundError('Atlas has the LFS pointer but not the image bytes')
         partial.replace(destination)
         return destination
     return Path(hf_hub_download(args.repo, name, repo_type='dataset', revision=revision, token=token))
@@ -368,7 +391,7 @@ def existing_splits(local_root, inventory_paths, output):
     reviewed = set()
     with sheet_metadata.open(encoding='utf-8') as stream:
         for line in stream:
-            if not line.strip():
+            if not line.strip() or line.startswith('version https://git-lfs'):
                 continue
             row = json.loads(line)
             status = str(row.get('status', ''))
@@ -436,6 +459,8 @@ def main():
     parser.add_argument('--repo', default='ethanzxv/pixelart-dataset')
     parser.add_argument('--revision', default='main')
     parser.add_argument('--local-root', type=Path, default=DEFAULT_LOCAL)
+    parser.add_argument('--atlas-checkout', type=Path, help='Use a local Atlas Git checkout as the pinned dataset source')
+    parser.add_argument('--path-prefix', help='Only queue source images under this repository-relative directory')
     parser.add_argument('--output', type=Path, default=WORK / 'full')
     parser.add_argument('--server', default='http://127.0.0.1:8091')
     parser.add_argument('--backend', choices=['llama.cpp', 'vllm'], default='llama.cpp')
@@ -456,7 +481,7 @@ def main():
     args.output = args.output.resolve()
     args.output.mkdir(parents=True, exist_ok=True)
     args.compress_output = args.backend == 'vllm' if args.compress_output is None else args.compress_output
-    args.ephemeral_downloads = args.backend == 'vllm'
+    args.ephemeral_downloads = args.backend == 'vllm' or bool(args.atlas_checkout)
     db = open_database(args.output / 'annotations.sqlite3')
     if args.export_only:
         export(db, args.output, 'annotations_lfm3.snapshot.jsonl.gz' if args.compress_output else 'annotations_lfm3.snapshot.jsonl', compress=args.compress_output)
@@ -472,7 +497,24 @@ def main():
             if temporary.is_file():
                 temporary.unlink()
     load_dotenv(ROOT / 'dataset-viewer/.env', override=False)
-    token = os.environ.get('HF_TOKEN') or os.environ.get('HUGGINGFACE_HUB_TOKEN') or os.environ.get('HF_ACCESS_TOKEN')
+    if args.atlas_checkout:
+        args.local_root = args.atlas_checkout.resolve()
+        origin = subprocess.run(['git', '-C', str(args.local_root), 'remote', 'get-url', 'origin'],
+                                check=True, capture_output=True, text=True).stdout.strip()
+        if origin != ATLAS_URL:
+            parser.error('The Atlas checkout must use the Atlas dataset SSH URL as origin')
+        args.repo = ATLAS_URL
+        token = os.environ.get('ATLAS_TOKEN')
+        if not token:
+            credential = subprocess.run(
+                ['git', 'credential', 'fill'], input='protocol=https\nhost=atlas.methil.group\n\n',
+                cwd=args.local_root, env={**os.environ, 'GIT_TERMINAL_PROMPT': '0', 'GIT_ASKPASS': ''},
+                text=True, capture_output=True,
+            )
+            token = next((line.removeprefix('password=') for line in credential.stdout.splitlines()
+                          if line.startswith('password=')), None) if credential.returncode == 0 else None
+    else:
+        token = os.environ.get('HF_TOKEN') or os.environ.get('HUGGINGFACE_HUB_TOKEN') or os.environ.get('HF_ACCESS_TOKEN')
     doc = inventory(args, token)
     current_local = subprocess.run(['git', '-C', str(args.local_root), 'rev-parse', 'HEAD'],
                                    text=True, capture_output=True)
@@ -505,6 +547,13 @@ def main():
                       self_review=True, review_prompt_sha256=sha(REVIEW_INSTRUCTION.encode()))
     config.update(compressed_output=args.compress_output, ephemeral_source_downloads=args.ephemeral_downloads,
                   retained_palette_entries=64)
+    relevant = doc['paths']
+    if args.path_prefix:
+        prefix = args.path_prefix.rstrip('/') + '/'
+        relevant = [path for path in relevant if path.startswith(prefix)]
+        if not relevant:
+            parser.error('No source images match --path-prefix')
+        config['selection']['path_prefix'] = prefix
     fingerprint = sha(json.dumps(config, sort_keys=True).encode())
     previous = db.execute('SELECT value FROM config WHERE key="fingerprint"').fetchone()
     if previous and previous[0] != fingerprint:
@@ -514,9 +563,11 @@ def main():
                'started_at_utc': datetime.now(timezone.utc).isoformat()})
     write_json(args.output / 'annotation.schema.json', json_schema(dimensions, leaves))
     (args.output / 'annotation.gbnf').write_text(grammar(dimensions, leaves))
-    paths = selected_images(doc['paths'], args.benchmark, args.limit, args.all)
+    paths = selected_images(relevant, args.benchmark, args.limit, args.all)
     args.preview_paths = set(paths[:24])
-    args.existing_splits = existing_splits(args.local_root, doc['paths'], args.output)
+    args.existing_splits = existing_splits(args.local_root, doc['paths'], args.output) if any(
+        path.startswith('source_sheets/') for path in relevant
+    ) else {}
     db.executemany('INSERT OR IGNORE INTO jobs(path) VALUES(?)', ((p,) for p in paths))
     db.execute('UPDATE jobs SET status="pending",attempts=0 WHERE status="running"')
     db.execute('UPDATE jobs SET attempts=0 WHERE status="pending" AND attempts>=3')
@@ -551,7 +602,7 @@ def main():
                     break
                 done, _ = wait(pending, timeout=30, return_when=FIRST_COMPLETED)
                 if not done:
-                    progress(db, args, len(doc['paths']), started, initial_done)
+                    progress(db, args, len(relevant), started, initial_done)
                 for future in done:
                     job = pending.pop(future)
                     try:
@@ -592,12 +643,12 @@ def main():
                         if consecutive_failures >= 5:
                             raise RuntimeError('Five consecutive failures; stopping for diagnosis, queue preserved') from exc
                     if time.monotonic() - last_progress >= 1:
-                        progress(db, args, len(doc['paths']), started, initial_done)
+                        progress(db, args, len(relevant), started, initial_done)
                         last_progress = time.monotonic()
                     if completions and completions % 25 == 0:
                         review(db, args.output)
     finally:
-        summary = progress(db, args, len(doc['paths']), started, initial_done)
+        summary = progress(db, args, len(relevant), started, initial_done)
         export(db, args.output, compress=args.compress_output)
         review(db, args.output)
         split_statuses = Counter()

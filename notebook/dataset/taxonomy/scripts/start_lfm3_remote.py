@@ -25,6 +25,9 @@ def main():
     parser.add_argument('--port', type=int, default=8092)
     parser.add_argument('--workers', type=int, default=128)
     parser.add_argument('--output', type=Path, default=WORK / 'full_bf16')
+    parser.add_argument('--atlas-checkout', type=Path)
+    parser.add_argument('--path-prefix')
+    parser.add_argument('--revision', default='main')
     choice = parser.add_mutually_exclusive_group()
     choice.add_argument('--all', action='store_true')
     choice.add_argument('--benchmark', type=int)
@@ -32,6 +35,8 @@ def main():
     args = parser.parse_args()
     if not args.host:
         parser.error('Supply --host or set IRIS_SSH_HOST in the ignored local .env')
+    if args.atlas_checkout and args.output == WORK / 'full_bf16':
+        parser.error('Use a separate --output for Atlas jobs to protect the existing checkpoint')
     args.output = args.output.resolve()
     args.output.mkdir(parents=True, exist_ok=True)
     WORK.mkdir(exist_ok=True)
@@ -67,6 +72,11 @@ def main():
                '--backend', 'vllm', '--server', endpoint, '--workers', str(args.workers),
                '--output', str(args.output)]
     command += ['--all'] if args.all else ['--benchmark', str(args.benchmark)] if args.benchmark else ['--limit', str(args.limit)]
+    command += ['--revision', args.revision]
+    if args.atlas_checkout:
+        command += ['--atlas-checkout', str(args.atlas_checkout.resolve())]
+    if args.path_prefix:
+        command += ['--path-prefix', args.path_prefix]
     if shutil.which('caffeinate'):
         command = ['caffeinate', '-i', *command]
     with (args.output / 'run.log').open('a') as log:
