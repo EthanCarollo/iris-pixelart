@@ -8,6 +8,8 @@ Pour installer le projet ailleurs et reprendre les annotations sauvegardées, vo
 
 Le notebook de sync démarre en mode prévisualisation. Vérifie les comptes et chemins avant d’activer la publication.
 
+Les notebooks d’entraînement, d’analyse et de taxonomie lisent le dataset depuis Atlas sur la branche `main`. Installe Git LFS et configure l’accès SSH à Atlas avant de les lancer. La révision est affichée au chargement et seuls les objets LFS sélectionnés sont téléchargés. Tu peux indiquer un clone Atlas existant dans `ATLAS_DATASET_DIR`. Les cellules de publication Hugging Face et les scripts CLI de reprise LFM restent configurés séparément.
+
 ## Palettes exactes du dataset
 
 Les couleurs sont calculées directement depuis les PNG, sans être estimées par le modèle à partir de la caption. Depuis la racine du dépôt, mesure les images annotées par Qwen3.8 :

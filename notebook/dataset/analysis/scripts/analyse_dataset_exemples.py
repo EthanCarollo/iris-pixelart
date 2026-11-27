@@ -1,33 +1,16 @@
-# Charge le token depuis l’environnement ou les fichiers .env connus, sans jamais l’imprimer.
 import textwrap
-for env_file in (PROJECT_ROOT / '.env', PROJECT_ROOT / 'training/.env', Path.home() / 'iris-sprite-lora/training/.env'):
-    if not env_file.is_file():
-        continue
-    for line in env_file.read_text(encoding='utf-8').splitlines():
-        key, separator, value = line.partition('=')
-        if separator and key.strip() in {'HF_TOKEN', 'HUGGINGFACE_HUB_TOKEN'}:
-            os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
-            break
-HF_TOKEN = os.environ.get('HF_TOKEN') or os.environ.get('HUGGINGFACE_HUB_TOKEN') or True
 
-
-cache_roots = [PROJECT_ROOT / 'notebook/training/iris_sprite_lora_work/source_images']
 image_sample = random.Random(GRAINE).sample(qwen_rows, min(N_EXEMPLES, len(qwen_rows)))
-image_records = []
-for row in image_sample:
-    source = row.get('source', {})
-    relative_path = str(source.get('relative_path', '')).replace('\\', '/')
-    root_name = str(source.get('root', 'data'))
-    image_path = next((root / root_name / relative_path for root in cache_roots if (root / root_name / relative_path).is_file()), None)
-    if image_path is None and TELECHARGER_IMAGES_HF and relative_path:
-        try:
-            image_path = Path(hf_hub_download(
-                repo_id=DATASET_REPO, repo_type='dataset',
-                filename=f'data/{relative_path}', token=HF_TOKEN,
-            ))
-        except Exception:
-            image_path = None
-    image_records.append((row, image_path))
+asset_paths = [annotation_asset_path(row) for row in image_sample]
+if TELECHARGER_IMAGES_ATLAS:
+    image_paths = atlas_dataset.hydrate(asset_paths, allow_missing=True)
+else:
+    image_paths = {}
+    for name in asset_paths:
+        path = atlas_dataset.path(name)
+        if path.is_file() and not atlas_dataset.is_pointer(path):
+            image_paths[name] = path
+image_records = [(row, image_paths.get(name)) for row, name in zip(image_sample, asset_paths)]
 
 # Matplotlib : chaque sprite a une zone de texte distincte juste en dessous.
 import matplotlib.pyplot as plt
